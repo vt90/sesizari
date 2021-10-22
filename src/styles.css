@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'Museo';
+    src: local('Museo'), url(./fonts/Museo Sans.ttf) format('truetype');
+}
+
+@font-face {
+    font-family: 'Museo';
+    font-weight: 900;
+    src: local('Museo'), url(./fonts/MuseoSans-900.ttf) format('truetype');
+}
