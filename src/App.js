@@ -249,7 +249,7 @@ const App = () => {
       canGoForward: () => true,
       canGoBack: () => true,
     }, {
-      title: 'Confirmare',
+      title: 'Status',
       content: <>
         <Box display="flex" alignItems="center" justifyContent="center" mt={6} mb={2}>
           <CheckCircleOutlinedIcon fontSize="large" color="primary" />
@@ -286,15 +286,17 @@ const App = () => {
                 </Box>
               </Box>
               <CardContent>
-                <Stepper nonLinear activeStep={activeStep}>
-                  {steps.map(({title}, index) => (
-                      <Step key={title} completed={activeStep > index}>
-                        <StepButton color="inherit">
-                          {title}
-                        </StepButton>
-                      </Step>
-                  ))}
-                </Stepper>
+                <Box mx={-1}>
+                  <Stepper nonLinear activeStep={activeStep}>
+                    {steps.map(({title}, index) => (
+                        <Step key={title} completed={activeStep > index}>
+                          <StepButton color="inherit">
+                            {title}
+                          </StepButton>
+                        </Step>
+                    ))}
+                  </Stepper>
+                </Box>
 
                 <Box my={4}>
                   {stepInfo.content}
