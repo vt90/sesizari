@@ -99,17 +99,15 @@ const MapComponent = withScriptjs(withGoogleMap((props) => (
     </GoogleMap>
 )));
 
-const App = (props) => {
+const App = () => {
 
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
   const [showPerson, setShowPerson] = useState("da");
-  const [location, setLocation] = useState('Parcul Central Simion Bărnuțiu, Cluj Napoca');
+  const [location] = useState('Parcul Central Simion Bărnuțiu, Cluj Napoca');
   const [files, setFiles] = useState([]);
 
   const onUpload = (ev) => {
     const files = [];
-
-    console.log(ev.target.files);
 
     for (let file of ev.target.files) {
       files.push(URL.createObjectURL(file))
@@ -147,14 +145,20 @@ const App = (props) => {
       content: (
           <>
             <Box mb={2} display="flex" alignItems="center">
-              <Typography color="textSecondary"><RoomIcon fontSize="large"/></Typography>
+              <Box mb={4}>
+                <Typography color="textSecondary"><RoomIcon fontSize="large"/></Typography>
+              </Box>
               &nbsp;
-              <Typography variant="body2" color="textSecondary" gutterBottom={true}>
-                <strong>
-                  {location} <br/>
-                  {lat}, {lng}
-                </strong>
-              </Typography>
+              <Box>
+                <Typography variant="body2" color="textSecondary" gutterBottom={true}>
+                  <strong>
+                    {location} <br/>
+                    {lat}, {lng}
+                  </strong>
+                </Typography>
+
+                <Button size="small" onClick={() => setActiveStep(0)}>Modifica Locatia</Button>
+              </Box>
             </Box>
 
             <Divider/>
