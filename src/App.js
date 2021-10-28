@@ -69,7 +69,8 @@ const shadows = [
 let theme = createTheme({
   palette: {
     primary: {
-      main: '#0093E9'
+      main: '#39b349',
+      contrastText: '#FFFFFF',
     },
     text: {
       primary: '#383434',
@@ -278,11 +279,11 @@ const App = () => {
           <Box my={3} style={{ minHeight: 'calc(100vh - 188px)' }}>
             <Card elevation={12}>
               <Box display="flex" justifyContent="center" pt={2} pb={1} style={{
-                backgroundColor: '#0093E9',
-                backgroundImage: 'linear-gradient(160deg, #0093E9 0%, #80D0C7 100%)',
+                // backgroundColor: '#0093E9',
+                // backgroundImage: 'linear-gradient(160deg, #0093E9 0%, #80D0C7 100%)',
               }}>
                 <Box>
-                  <img alt="Primaria Cluj Napoca" src="primaria-cluj-white.png" style={{ width: 126, height: 'auto' }} />
+                  <img alt="Eco Garden" src="eco-garden-logo.png" style={ { width: 126, height: 'auto' } } />
                 </Box>
               </Box>
               <CardContent>
@@ -325,7 +326,7 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Eco Garden" src="ecogarden.png" style={ { width: 106, height: 'auto' } } />
+                  <img alt="Primaria Cluj Napoca" src="primaria-cluj.jpeg" style={{ width: 106, height: 'auto' }} />
                 </Box>
               </Box>
             </Box>
