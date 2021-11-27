@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -20,7 +20,9 @@ import AddAPhoto from '@mui/icons-material/AddAPhoto';
 import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
+import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg} from './api/backend';
 import './styles.css';
+import queryString from 'query-string';
 
 const CustomGrid = styled(Grid)(({theme}) => ({
   alignItems: 'center',
@@ -91,31 +93,129 @@ theme = responsiveFontSizes(theme)
 
 const [lat, lng] = [46.770302, 23.578357];
 
-const MapComponent = withScriptjs(withGoogleMap((props) => (
-    <GoogleMap
-        defaultZoom={18}
-        defaultCenter={{lat, lng}}
-    >
-      <Marker position={{lat, lng}}/>
-    </GoogleMap>
-)));
+let fileToUpload = null;
 
 const App = () => {
 
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
   const [showPerson, setShowPerson] = useState("da");
-  const [location] = useState('Parcul Central Simion Bărnuțiu, Cluj Napoca');
+  const [location, setLocation] = useState('');
+  const [latLong, setLatLong] = useState([46.770302, 23.578357]);
   const [files, setFiles] = useState([]);
+  const [setupOk, setSetupOk] = useState(true);
+  const [description, setDescription] = useState('');
+  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [assetId, setAssetId] = useState(null);
+  const [locationId, setLocationId] = useState(null);
+  const [ticketInfo, setTicketInfo] = useState(null);
 
   const onUpload = (ev) => {
     const files = [];
 
     for (let file of ev.target.files) {
-      files.push(URL.createObjectURL(file))
+      files.push(URL.createObjectURL(file));
+      fileToUpload = file;
     }
 
     setFiles(files);
   }
+
+  const onMapLoad = () => {
+    navigator?.geolocation.getCurrentPosition(
+      ({ coords: { latitude: lat, longitude: lng } }) => {
+        setLatLong([lat, lng]);
+      }
+    );
+  };
+
+  useEffect(() => {
+    if (window.google && window.google.maps) {
+      const geocoder = new window.google.maps.Geocoder();
+
+      geocoder.geocode({ location: {
+        lat: parseFloat(latLong[0]),
+        lng: parseFloat(latLong[1]),
+      }}).then(response => {
+        if (response.results.length && response.results[0].formatted_address) {
+          setLocation(response.results[0].formatted_address);
+        }
+      });  
+    }
+  }, [latLong]);
+
+  useEffect(() => {
+    const submit = async () => {
+      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName);
+
+      if (res && res.ticket_id) {
+        setTicketInfo(res);
+        if (fileToUpload) {
+          await uploadTicketImg(res.ticket_id, fileToUpload);
+        }
+      }
+    }
+    if (activeStep === 2 && !ticketInfo) {
+      submit();
+    }
+
+    // eslint-disable-next-line
+  }, [activeStep]);
+
+  const MapComponent = withScriptjs(withGoogleMap((props) => (
+      <GoogleMap
+          defaultZoom={18}
+          onClick={ev => {
+            setLatLong([ev.latLng.lat(), ev.latLng.lng()]);
+          }}    
+          defaultCenter={{lat: latLong[0], lng: latLong[1]}}
+      >
+        <Marker position={{lat: latLong[0], lng: latLong[1]}}/>
+      </GoogleMap>
+  )));
+
+
+  useEffect(() => {
+    const parsed = queryString.parse(window.location.search);
+    const setup = async () => {
+      const loginStatus = await defaultLogin();
+      if (!loginStatus) {
+        setSetupOk(false);
+
+        return ;
+      }
+
+      onMapLoad();
+      if (parsed && parsed.asset_id) {
+        const assetAndLocation = await loadAsset(parsed.asset_id);
+        if (assetAndLocation.asset && assetAndLocation.asset.asset_id) {
+          setAssetId(assetAndLocation.asset.asset_id);
+        }
+
+        if (assetAndLocation.location && assetAndLocation.location.nume) {
+          setLocation(assetAndLocation.location.nume);
+          setLocationId(assetAndLocation.location.locatie_id);
+          
+          if (assetAndLocation.location.lat && assetAndLocation.location.lon) {
+            setLatLong([parseFloat(assetAndLocation.location.lat), parseFloat(assetAndLocation.location.lon)]);
+          }
+        }
+      } else if (loginStatus && loginStatus.locatie_id) {
+        const location = await loadLocatie(loginStatus.locatie_id);
+        if (location && location.nume) {
+          setLocation(location.nume);
+          setLocationId(location.locatie_id);
+          
+          if (location.lat && location.lon) {
+            setLatLong([parseFloat(location.lat), parseFloat(location.lon)]);
+          }
+        }
+      }
+    }
+    
+    setup();
+  }, []);
 
   const steps = [
     {
@@ -124,7 +224,7 @@ const App = () => {
           <>
             <Box mb={2}>
               <MapComponent
-                  googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyA2uNzwYOZF_FoN19_leFvXl9FJr7i85io"
+                  googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyDTr0t1pqHwjXrF1s-Mn4zeyznMwdKDwQg&v"
                   loadingElement={<div style={{height: `100%`}}/>}
                   containerElement={<div style={{height: `400px`}}/>}
                   mapElement={<div style={{height: `100%`}}/>}
@@ -132,7 +232,7 @@ const App = () => {
             </Box>
 
             <Typography variant="body1" color="textSecondary">
-              {lat}, {lng}
+              {latLong[0]}, {latLong[1]}
             </Typography>
 
             <Typography variant="h5" style={{display: 'flex', alignItems: 'center'}}>
@@ -173,6 +273,8 @@ const App = () => {
                   multiline
                   fullWidth
                   variant="outlined"
+                  value={description}
+                  onChange={ev => setDescription(ev.target.value)}
                   placeholder="Furnizati o descriere cat mai detaliata*"
                   minRows={5}
               />
@@ -197,7 +299,6 @@ const App = () => {
                   accept="image/*"
                   style={{display: 'none'}}
                   id="raised-button-file"
-                  multiple
                   type="file"
                   onChange={onUpload}
               />
@@ -228,6 +329,8 @@ const App = () => {
                     <TextField
                         id="name"
                         fullWidth
+                        value={userName}
+                        onChange={ev => setUserName(ev.target.value)}
                         variant="outlined"
                         placeholder="Numele dumneavoastra*"
                     />
@@ -237,6 +340,10 @@ const App = () => {
                     <TextField
                         id="email"
                         fullWidth
+                        error={emailError}
+                        value={email}
+                        onChange={ev => setEmail(ev.target.value)}
+                        onBlur={() => setEmailError(!/(.+)@(.+){2,}\.(.+){2,}/.test(email))}
                         variant="outlined"
                         placeholder="Adresa de email*"
                     />
@@ -247,7 +354,7 @@ const App = () => {
           </>
       ),
       title: 'Raport',
-      canGoForward: () => true,
+      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3) || showPerson === 'nu'),
       canGoBack: () => true,
     }, {
       title: 'Status',
@@ -262,7 +369,7 @@ const App = () => {
         <Box  mb={6}>
 
           <Typography color="textSecondary" align="center">
-            Sesizare #{Math.floor(Math.random() * 5000)} a fost creata cu success
+            Sesizare #{ticketInfo?.code} a fost creata cu success
           </Typography>
         </Box>
       </>,
@@ -286,7 +393,7 @@ const App = () => {
                   <img alt="Eco Garden" src="eco-garden-logo.png" style={ { width: 126, height: 'auto' } } />
                 </Box>
               </Box>
-              <CardContent>
+              {setupOk ? (<CardContent>
                 <Box mx={-1}>
                   <Stepper nonLinear activeStep={activeStep}>
                     {steps.map(({title}, index) => (
@@ -312,7 +419,11 @@ const App = () => {
                   <Button variant="contained" color="primary" disabled={!stepInfo.canGoForward()}
                           onClick={() => setActiveStep(activeStep + 1)}>Inainte</Button>}
                 </Box>
-              </CardContent>
+              </CardContent>) : (
+                <Typography color="textSecondary" align="center">
+                  Avem probleme in comunicarea cu serverul. Va rugam incercati mai tarziu.
+                </Typography>
+              )}
             </Card>
           </Box>
 
@@ -326,7 +437,9 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Primaria Cluj Napoca" src="primaria-cluj.jpeg" style={{ width: 106, height: 'auto' }} />
+                  <img alt="Primaria Cluj Napoca" src="primaria-cluj.jpeg" style={{ width: 'auto', height: 106 }} />
+                  &nbsp;&nbsp;&nbsp;&nbsp;
+                  <img alt="Mentdrive" src="logo-mentdrive.jpeg" style={{ width: 'auto', height: 106 }} />
                 </Box>
               </Box>
             </Box>
