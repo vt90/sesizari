@@ -187,7 +187,6 @@ const App = () => {
         return ;
       }
 
-      alert('waittt');
       onMapLoad();
       if (parsed && parsed.asset_id) {
         const assetAndLocation = await loadAsset(parsed.asset_id);
