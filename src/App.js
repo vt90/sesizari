@@ -123,6 +123,7 @@ const App = () => {
   }
 
   const onMapLoad = () => {
+    console.log(navigator?.geolocation);
     navigator?.geolocation.getCurrentPosition(
       ({ coords: { latitude: lat, longitude: lng } }) => {
         setLatLong([lat, lng]);
@@ -186,6 +187,7 @@ const App = () => {
         return ;
       }
 
+      alert('waittt');
       onMapLoad();
       if (parsed && parsed.asset_id) {
         const assetAndLocation = await loadAsset(parsed.asset_id);
