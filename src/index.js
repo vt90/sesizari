@@ -2,9 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {Helmet} from "react-helmet";
 
 ReactDOM.render(
   <React.StrictMode>
+    <Helmet>
+      <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyDTr0t1pqHwjXrF1s-Mn4zeyznMwdKDwQg&v" />
+    </Helmet>
     <App />
   </React.StrictMode>,
   document.getElementById('root')

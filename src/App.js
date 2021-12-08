@@ -12,6 +12,8 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepButton from '@mui/material/StepButton';
 import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -19,8 +21,10 @@ import {createTheme, ThemeProvider, styled, responsiveFontSizes} from '@mui/mate
 import AddAPhoto from '@mui/icons-material/AddAPhoto';
 import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
+import Modal from '@mui/material/Modal';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg} from './api/backend';
+import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode} from './api/backend';
+import TermsModal from './TermsModal';
 import './styles.css';
 import queryString from 'query-string';
 
@@ -32,6 +36,20 @@ const CustomGrid = styled(Grid)(({theme}) => ({
     borderRadius: 3,
   },
 }));
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '80%',
+  bgcolor: 'white',
+  border: '2px solid #000',
+  boxShadow: 24,
+  maxHeight: 400,
+  overflow: 'auto',
+  p: 4,
+};
 
 
 
@@ -97,7 +115,7 @@ let fileToUpload = null;
 
 const App = () => {
 
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
   const [showPerson, setShowPerson] = useState("da");
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState([46.770302, 23.578357]);
@@ -106,10 +124,17 @@ const App = () => {
   const [description, setDescription] = useState('');
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
+  const [searchTicketNumber, setSearchTicketNumber] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [assetId, setAssetId] = useState(null);
   const [locationId, setLocationId] = useState(null);
   const [ticketInfo, setTicketInfo] = useState(null);
+  const [oldTicket, setOldTicket] = useState(null);
+  const [termsChecked, setTermsChecked] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleOpen = () => setModalOpen(true);
+  const handleClose = () => setModalOpen(false);
 
   const onUpload = (ev) => {
     const files = [];
@@ -123,7 +148,6 @@ const App = () => {
   }
 
   const onMapLoad = () => {
-    console.log(navigator?.geolocation);
     navigator?.geolocation.getCurrentPosition(
       ({ coords: { latitude: lat, longitude: lng } }) => {
         setLatLong([lat, lng]);
@@ -152,6 +176,11 @@ const App = () => {
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
+        setOldTicket(null);
+        setDescription('');
+        setUserName('');
+        setEmail('');
+        setShowPerson('da');
         if (fileToUpload) {
           await uploadTicketImg(res.ticket_id, fileToUpload);
         }
@@ -159,6 +188,10 @@ const App = () => {
     }
     if (activeStep === 2 && !ticketInfo) {
       submit();
+    }
+    if (activeStep !== 2) {
+      setOldTicket(null);
+      setSearchTicketNumber('');
     }
 
     // eslint-disable-next-line
@@ -217,6 +250,22 @@ const App = () => {
     
     setup();
   }, []);
+
+  useEffect(() => {
+    const search = async () => {
+      const resp = await searchTicketByCode(searchTicketNumber);
+      if (resp && resp.list && resp.list.length) {
+        setOldTicket(resp.list[0]);
+        setActiveStep(2);
+        setTicketInfo(null);
+      } else {
+        alert("Cod tichet invalid");
+      }
+    }
+    if (searchTicketNumber && searchTicketNumber.length === 6) {
+      search();
+    }
+  }, [searchTicketNumber]);
 
   const steps = [
     {
@@ -349,29 +398,44 @@ const App = () => {
                         placeholder="Adresa de email*"
                     />
                   </Box>
+
+                  <Box mb={1}>
+                    <FormControlLabel 
+                      control={<Checkbox id="terms" checked={termsChecked} onChange={ev => setTermsChecked(ev.target.checked)} />}
+                      label="Sunt de acord cu următorii termeni și condiții:" />
+                      <Typography style={{cursor: 'pointer', textDecoration: 'underline', lineHeight: '42px'}} onClick={handleOpen} variant="body1" color="black">
+                        deschideți termeni și condiții
+                      </Typography>
+                      {/* <a style="" onClick={handleOpen} href="javascript: void(0)">deschide termeni și condiții</a> */}
+                  </Box>
                 </>
               </Collapse>
             </Box>
           </>
       ),
       title: 'Raport',
-      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3) || showPerson === 'nu'),
+      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && termsChecked) || showPerson === 'nu'),
       canGoBack: () => true,
     }, {
       title: 'Status',
       content: <>
-        <Box display="flex" alignItems="center" justifyContent="center" mt={6} mb={2}>
+        {ticketInfo && ticketInfo?.code ? (<Box display="flex" alignItems="center" justifyContent="center" mt={6} mb={2}>
           <CheckCircleOutlinedIcon fontSize="large" color="primary" />
 
           <Typography align="center" variant="h5" color="primary">
             Va multumim
           </Typography>
-        </Box>
+        </Box>) : null}
         <Box  mb={6}>
-
-          <Typography color="textSecondary" align="center">
+          {ticketInfo && ticketInfo?.code ? (<Typography color="textSecondary" align="center">
             Sesizare #{ticketInfo?.code} a fost creata cu success
-          </Typography>
+          </Typography>) : null}
+
+          {oldTicket && oldTicket?.code ? (<Typography color="textSecondary" align="center">
+            Sesizare #{oldTicket?.code} este in statusul: {oldTicket?.status === 2 ? 'rezolvata' : 'deschisa'}.<br />
+            <br /><strong>Deschisa la data:</strong> {oldTicket?.created_date}
+            <br /><br /><strong>Descriere:</strong> {oldTicket?.text}
+          </Typography>) : null}
         </Box>
       </>,
       canGoBack: () => true,
@@ -386,12 +450,16 @@ const App = () => {
         <Container maxWidth="md">
           <Box my={3} style={{ minHeight: 'calc(100vh - 188px)' }}>
             <Card elevation={12}>
-              <Box display="flex" justifyContent="center" pt={2} pb={1} style={{
-                // backgroundColor: '#0093E9',
-                // backgroundImage: 'linear-gradient(160deg, #0093E9 0%, #80D0C7 100%)',
-              }}>
-                <Box>
-                  <img alt="Eco Garden" src="eco-garden-logo.png" style={ { width: 126, height: 'auto' } } />
+              <Box display="flex" justifyContent="center" pt={2} pb={1}  style={{position: 'relative'}}>
+                  <input type="text"
+                        id="ticket_search"
+                        value={searchTicketNumber}
+                        onChange={ev => setSearchTicketNumber(ev.target.value)}
+                        style={{position: 'absolute', width: '90px', right: 10, top: 30, height: 20, padding: 5, border: '1px solid grey', borderRadius: '4px'}}
+                        placeholder="Cautare tichet"
+                    />
+                <Box display="flex" style={{width: '100%'}} justifyContent="left">
+                  <img alt="Eco Garden" src="/sesizari/eco-garden-logo.png" style={ { width: 126, height: 'auto', marginLeft: 15 } } />
                 </Box>
               </Box>
               {setupOk ? (<CardContent>
@@ -438,13 +506,24 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Primaria Cluj Napoca" src="primaria-cluj.jpeg" style={{ width: 'auto', height: 106 }} />
+                  <img alt="Primaria Cluj Napoca" src="/sesizari/primaria-cluj.jpeg" style={{ width: 'auto', height: 106 }} />
                   &nbsp;&nbsp;&nbsp;&nbsp;
-                  <img alt="Mentdrive" src="logo-mentdrive.jpeg" style={{ width: 'auto', height: 106 }} />
+                  <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 106 }} />
                 </Box>
               </Box>
             </Box>
           </Box>
+
+          <Modal
+            open={modalOpen}
+            onClose={handleClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={modalStyle}>
+              <TermsModal />
+            </Box>
+          </Modal>
         </Container>
       </ThemeProvider>
   );

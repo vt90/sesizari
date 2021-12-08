@@ -25,6 +25,14 @@ export const loadTickets = async () => {
     return await apiCall('/loadTickets.do');
 }
 
+export const searchTicketByCode = async (code) => {
+    return await apiCall('/loadTickets.do', {
+        code,
+        page_number: 0,
+        page_size: 1,
+    });
+}
+
 export const loadAsset = async (assetId) => {
     const asset = await apiCall('/loadAsset.do', {asset_id: assetId});
     const location = await apiCall('/loadLocatie.do', {locatie_id: asset.locatie_id});
@@ -41,12 +49,12 @@ export const createTicket = async (description, assetId, locationId, lat, long, 
         const data = {
             status: 1,
             text: description,
-            Latitude: lat,
-            Longitude: long,
+            latitude: lat,
+            longitude: long,
             ...(assetId ? {asset_id: assetId} : {}),
             ...(locationId ? {locatie_id: locationId} : {}),
             ...(email ? {email_guest: email} : {}),
-            ...(userName ? {Name_guest: userName} : {}),
+            ...(userName ? {name_guest: userName} : {}),
         }
 
         return await apiCall('/saveTicket.do', data); 
