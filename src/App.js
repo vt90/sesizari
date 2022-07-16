@@ -12,6 +12,8 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepButton from '@mui/material/StepButton';
 import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
@@ -23,7 +25,7 @@ import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
 import Modal from '@mui/material/Modal';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode} from './api/backend';
+import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode, loadSpecializari} from './api/backend';
 import TermsModal from './TermsModal';
 import './styles.css';
 import queryString from 'query-string';
@@ -89,7 +91,7 @@ const shadows = [
 let theme = createTheme({
   palette: {
     primary: {
-      main: '#39b349',
+      main: '#ff0000',
       contrastText: '#FFFFFF',
     },
     text: {
@@ -120,8 +122,10 @@ const App = () => {
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState([46.770302, 23.578357]);
   const [files, setFiles] = useState([]);
+  const [specializari, setSpecializari] = useState([]);
   const [setupOk, setSetupOk] = useState(true);
   const [description, setDescription] = useState('');
+  const [specializare, setSpecializare] = useState(0);
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [searchTicketNumber, setSearchTicketNumber] = useState('');
@@ -172,7 +176,7 @@ const App = () => {
 
   useEffect(() => {
     const submit = async () => {
-      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName);
+      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName, specializare);
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
@@ -209,6 +213,19 @@ const App = () => {
       </GoogleMap>
   )));
 
+  useEffect(() => {
+    if (setupOk) {
+      const loadData = async () => {
+        const data = await loadSpecializari();
+        console.log(data, data.list);
+        if (data && data.list) {
+          setSpecializari(data.list);
+        }
+      }
+
+      loadData();
+    }
+  }, [setupOk]);
 
   useEffect(() => {
     const parsed = queryString.parse(window.location.search);
@@ -313,6 +330,26 @@ const App = () => {
             </Box>
 
             <Divider/>
+
+            <Box mt={2} mb={1}>
+              <Typography variant="h5" paragraph={true}>
+                Tip problema
+              </Typography>
+              <Select
+                id="tip-problema"
+                value={specializare}
+                label="Tip problema"
+                style={{width: '100%'}}
+                onChange={(event) => {
+                  setSpecializare(event.target.value);
+                }}
+              >
+                {specializari.map((specializare) => 
+                  <MenuItem style={{background: 'white'}} key={specializare.specializare_id} value={specializare.specializare_id}>{specializare.nume}</MenuItem>
+                )}
+              </Select>
+            </Box>
+
 
             <Box mt={2} mb={1}>
               <Typography variant="h5" paragraph={true}>
@@ -436,6 +473,10 @@ const App = () => {
             <br /><strong>Deschisa la data:</strong> {oldTicket?.created_date}
             <br /><br /><strong>Descriere:</strong> {oldTicket?.text}
           </Typography>) : null}
+
+          {oldTicket && oldTicket?.step > 0 && oldTicket.step_logs && oldTicket.step_logs.length ? (<Typography color="textSecondary" align="center">
+            <br /><strong>Rezolutie:</strong> {oldTicket.step_logs[oldTicket.step_logs.length - 1].step_comment}
+          </Typography>) : null}
         </Box>
       </>,
       canGoBack: () => true,
@@ -459,7 +500,7 @@ const App = () => {
                         placeholder="Cautare tichet"
                     />
                 <Box display="flex" style={{width: '100%'}} justifyContent="left">
-                  <img alt="Eco Garden" src="/sesizari/eco-garden-logo.png" style={ { width: 126, height: 'auto', marginLeft: 15 } } />
+                  <img alt="STB" src="/sesizari/logo-stb.png" style={ { width: 126, height: 'auto', marginLeft: 15 } } />
                 </Box>
               </Box>
               {setupOk ? (<CardContent>
@@ -506,9 +547,7 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Primaria Cluj Napoca" src="/sesizari/primaria-cluj.jpeg" style={{ width: 'auto', height: 106 }} />
-                  &nbsp;&nbsp;&nbsp;&nbsp;
-                  <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 106 }} />
+                  <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 60 }} />
                 </Box>
               </Box>
             </Box>

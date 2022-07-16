@@ -6,7 +6,7 @@ const TermsModal = () => (
             POLITICA DE CONFIDENTIALITATE
         </Typography>
         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Acest site este deținut și administrat de ECO GARDEN CONSTRUCT. Ne angajăm să protejăm confidențialitatea vizitatorilor noștri în timp ce interacționează cu conținutul, produsele și serviciile de pe acest site (“https://www.ecogardenconstruct.com”). Această politică de confidențialitate se aplică numai site-ului Web. Nu se aplică și altor site-uri web la care ne referim. Deoarece colectăm anumite tipuri de informații despre utilizatorii noștri, vrem să înțelegeți ce informații colectăm despre dvs., cum le colectăm, cum sunt folosite aceste informații și cum puteți controla circuitul informatiilor dvs. Sunteți de acord că utilizarea de către dvs. a site-ului înseamnă aprobarea dvs. față de această Politică de confidențialitate. Dacă nu sunteți de acord cu această Politică de confidențialitate, vă rugăm să nu utilizați site-ul Web.
+            Acest site este deținut și administrat de STB. Ne angajăm să protejăm confidențialitatea vizitatorilor noștri în timp ce interacționează cu conținutul, produsele și serviciile de pe acest site (“https://www.ecogardenconstruct.com”). Această politică de confidențialitate se aplică numai site-ului Web. Nu se aplică și altor site-uri web la care ne referim. Deoarece colectăm anumite tipuri de informații despre utilizatorii noștri, vrem să înțelegeți ce informații colectăm despre dvs., cum le colectăm, cum sunt folosite aceste informații și cum puteți controla circuitul informatiilor dvs. Sunteți de acord că utilizarea de către dvs. a site-ului înseamnă aprobarea dvs. față de această Politică de confidențialitate. Dacă nu sunteți de acord cu această Politică de confidențialitate, vă rugăm să nu utilizați site-ul Web.
             <br /><br /><strong>INFORMAȚII COLECTATE</strong>
             <br />Colectăm două tipuri de informații de la dvs.: informații care vă identifică personal (de exemplu, printr-un proces de înregistrare voluntară, înscrieri sau e-mailuri) și informații care nu va identifică personal.  
             <br /><br />Informații care vă identifică personal
@@ -19,7 +19,7 @@ const TermsModal = () => (
     
             <br /><br /><strong>COOKIES</strong>
     
-            <br /><br />Cookie-urile sunt mici fragmente de informații stocate pe computer cu informații despre vizita pe site-ul nostru. Nici un alt site nu poate utiliza sau vizualiza cookie-urile setate de ECO GARDEN CONSTRUCT. Putem folosi cookie-uri pe site pentru a face ca experiența noastră de pe site să fie mai convenabilă pentru dvs. (cum ar fi salvarea preferințelor dvs.). Aceste module cookie nu conțin în mod obișnuit informații de identificare personală. Rețineți că agențiile de publicitate care difuzează reclame pe site-ul nostru Web pot utiliza propriile module cookie care fac obiectul politicii de confidențialitate a agentiilor de publicitate și nu al nostru.
+            <br /><br />Cookie-urile sunt mici fragmente de informații stocate pe computer cu informații despre vizita pe site-ul nostru. Nici un alt site nu poate utiliza sau vizualiza cookie-urile setate de STB. Putem folosi cookie-uri pe site pentru a face ca experiența noastră de pe site să fie mai convenabilă pentru dvs. (cum ar fi salvarea preferințelor dvs.). Aceste module cookie nu conțin în mod obișnuit informații de identificare personală. Rețineți că agențiile de publicitate care difuzează reclame pe site-ul nostru Web pot utiliza propriile module cookie care fac obiectul politicii de confidențialitate a agentiilor de publicitate și nu al nostru.
     
             <br /><br />Majoritatea browserelor web acceptă automat cookie-urile, dar dacă sunteți ingrijorat de stocarea și utilizarea cookie-urilor, puteți să le modificați opțiunea browserului pentru a le bloca în viitor. De asemenea, puteți șterge manual cookie-urile de pe unitatea hard disk prin browserul de internet.
     
@@ -27,17 +27,17 @@ const TermsModal = () => (
     
             <br /><br /><strong>CUM UTILIZAM INFORMATIILE DUMNEAVOASTRA</strong>
     
-            <br /><br />ECO GARDEN CONSTRUCT utilizează numai informațiile dvs. personale în scopurile inițiale pentru care au fost colectate.. Informațiile dvs. personale nu vor fi vândute sau transferate în alt mod terților fără aprobarea dvs. din momentul colectării.
+            <br /><br />STB utilizează numai informațiile dvs. personale în scopurile inițiale pentru care au fost colectate.. Informațiile dvs. personale nu vor fi vândute sau transferate în alt mod terților fără aprobarea dvs. din momentul colectării.
     
-            <br /><br />ECO GARDEN CONSTRUCT nu va divulga, utiliza, oferi sau vinde orice informatii personale unor terte parti in orice scop, cu exceptia cazului in care acest lucru este cerut de lege, sau acest lucru a fost aprobat in mod ferm de dvs..
+            <br /><br />STB nu va divulga, utiliza, oferi sau vinde orice informatii personale unor terte parti in orice scop, cu exceptia cazului in care acest lucru este cerut de lege, sau acest lucru a fost aprobat in mod ferm de dvs..
     
             <br /><br />Rețineți că informațiile de identificare personală sunt utilizate numai pentru a vă oferi o experiență online mai plăcută și mai convenabilă și pentru a ne ajuta să identificăm și / sau să furnizăm informații, produse sau servicii care ar putea fi de interes pentru dvs. Utilizăm informațiile dvs. de identificare personală pentru a vă sprijini și a îmbunătăți utilizarea site-ului și a caracteristicilor acestuia, inclusiv, dar fără a se limita la: trimiteri prin e-mail, furnizarea de servicii pentru clienți; urmărirea invitațiilor prin e-mail pe care le trimiteți; și sprijinirea în alt mod a utilizării site-ului.
     
-            <br /><br />ECO GARDEN CONSTRUCT vă poate folosi informațiile personale pentru publicitatea țintă spre dvs. pe baza unor date precum regiunea, genul, interesele, obiectivele, obiceiurile etc.
+            <br /><br />STB vă poate folosi informațiile personale pentru publicitatea țintă spre dvs. pe baza unor date precum regiunea, genul, interesele, obiectivele, obiceiurile etc.
     
             <br /><br />Este posibil ca anumite terțe părți de încredere (cum ar fi Google Analytics) să poată urmări utilizarea, să analizeze date cum ar fi adresa sursă de la care vine cererea de pagină, adresa dvs. IP sau numele domeniului, data și ora solicitării paginii, Website (dacă există) și alți parametri în URL. Acestea sunt colectate pentru a înțelege mai bine utilizarea site-ului nostru și pentru a spori performanța serviciilor pentru întreținerea și operarea site-ului Web și a anumitor caracteristici ale acestuia. Putem folosi terțe părți pentru a găzdui site-ul, utiliza diverse funcții disponibile de pe site, trimite emailuri; analiza datelor, furnizare rezultate de căutare etc..
     
-            <br /><br />ECO GARDEN CONSTRUCT poate dezvălui informații de contact în cazuri speciale în care avem motive să credem că dezvăluirea acestor informații este necesară pentru a identifica, contacta sau acționa în justiție împotriva unei persoane care poate încălca termenii și condițiile noastre de utilizare sau poate provoca vătămări sau interferențe cu drepturile, proprietatea, clienții noștri sau oricine ar putea fi afectat de astfel de activități.
+            <br /><br />STB poate dezvălui informații de contact în cazuri speciale în care avem motive să credem că dezvăluirea acestor informații este necesară pentru a identifica, contacta sau acționa în justiție împotriva unei persoane care poate încălca termenii și condițiile noastre de utilizare sau poate provoca vătămări sau interferențe cu drepturile, proprietatea, clienții noștri sau oricine ar putea fi afectat de astfel de activități.
     
             <br /><br />Utilizăm informații neidentificate și agregate pentru a proiecta mai bine site-ul nostru, în scopuri comerciale și administrative. Putem, de asemenea, utiliza sau împărtăși cu terțe părți, în orice scop, date agregate care nu conțin informații de identificare personală.
     
@@ -47,9 +47,9 @@ const TermsModal = () => (
     
             <br /><br /><strong>PUBLICITATE A UNEI TERȚE PĂRȚI</strong>
     
-            <br /><br />Anunțurile care apar pe acest site pot fi livrate de către ECO GARDEN CONSTRUCT sau unul dintre partenerii noștri de publicitate web. Partenerii noștri de publicitate web pot seta cookie-uri. Acest lucru permite partenerilor de publicitate să vă recunoască computerul de fiecare dată când vă trimit un anunț. În acest fel, aceștia pot compila informații despre locul în care dvs., sau alții care folosesc computerul dvs., le-ați văzut anunțurile și ați determinat ce reclame sunt accesate. Aceste informații permit unui partener publicitar să difuzeze anunțuri direcționate pe care le consideră cele mai interesante. ECO GARDEN CONSTRUCT nu are acces la sau controlul cookie-urilor care pot fi plasate de serverele de publicitate ale partenerilor.
+            <br /><br />Anunțurile care apar pe acest site pot fi livrate de către STB sau unul dintre partenerii noștri de publicitate web. Partenerii noștri de publicitate web pot seta cookie-uri. Acest lucru permite partenerilor de publicitate să vă recunoască computerul de fiecare dată când vă trimit un anunț. În acest fel, aceștia pot compila informații despre locul în care dvs., sau alții care folosesc computerul dvs., le-ați văzut anunțurile și ați determinat ce reclame sunt accesate. Aceste informații permit unui partener publicitar să difuzeze anunțuri direcționate pe care le consideră cele mai interesante. STB nu are acces la sau controlul cookie-urilor care pot fi plasate de serverele de publicitate ale partenerilor.
     
-            <br /><br />Această declarație de confidențialitate acoperă utilizarea cookie-urilor de către ECO GARDEN CONSTRUCT și nu acoperă utilizarea cookie-urilor de către oricare dintre agenții săi de publicitate.
+            <br /><br />Această declarație de confidențialitate acoperă utilizarea cookie-urilor de către STB și nu acoperă utilizarea cookie-urilor de către oricare dintre agenții săi de publicitate.
     
             <br /><br /><strong>ALEGEREA EMAIL / OPT-OUT</strong>
     
@@ -57,7 +57,7 @@ const TermsModal = () => (
     
             <br /><br /><strong>CONFIDENȚIALITATEA COPIILOR</strong>
     
-            <br /><br />Websiteul ECO GARDEN CONSTRUCT nu este adresat copiilor sub vârsta de treisprezece ani și nu colectăm cu bună știință informații personale de la ei. Dacă un părinte sau tutore al unui copil sub vârsta de treisprezece ani are motive să creadă că s-au divulgat informații personale ale copiilor, vă rugăm să ne contactați la office@ecogardenconstruct.com și vom elimina aceste informații din evidența noastră.
+            <br /><br />Websiteul STB nu este adresat copiilor sub vârsta de treisprezece ani și nu colectăm cu bună știință informații personale de la ei. Dacă un părinte sau tutore al unui copil sub vârsta de treisprezece ani are motive să creadă că s-au divulgat informații personale ale copiilor, vă rugăm să ne contactați la office@ecogardenconstruct.com și vom elimina aceste informații din evidența noastră.
     
             <br /><br /><strong>LINII EXTERNE</strong>
     
@@ -69,7 +69,7 @@ const TermsModal = () => (
     
             <br /><br /><strong>NOTIFICAREA SCHIMBĂRILOR</strong>
     
-            <br /><br />ECO GARDEN CONSTRUCT își rezervă dreptul de a modifica din timp în timp această politică de confidențialitate, la discreția sa. Dacă într-un anumit moment în viitor există modificări ale politicii noastre de confidențialitate, le vom posta pe site-ul nostru, deoarece vrem ca si vizitatorii noștri să fie întotdeauna informați cu privire la datele personale pe care le colectăm, la modul în care le folosim și la drepturile pe care le au.
+            <br /><br />STB își rezervă dreptul de a modifica din timp în timp această politică de confidențialitate, la discreția sa. Dacă într-un anumit moment în viitor există modificări ale politicii noastre de confidențialitate, le vom posta pe site-ul nostru, deoarece vrem ca si vizitatorii noștri să fie întotdeauna informați cu privire la datele personale pe care le colectăm, la modul în care le folosim și la drepturile pe care le au.
     
             <br /><br />Dacă aveți întrebări sau sugestii referitoare la politica noastră de confidențialitate, vă rugăm să ne contactați la: office@ecogardenconstruct.com.
         </Typography>

@@ -25,6 +25,10 @@ export const loadTickets = async () => {
     return await apiCall('/loadTickets.do');
 }
 
+export const loadSpecializari = async () => {
+    return await apiCall('/loadSpecializari.do');
+}
+
 export const searchTicketByCode = async (code) => {
     return await apiCall('/loadTickets.do', {
         code,
@@ -44,13 +48,14 @@ export const loadLocatie = async (locationId) => {
     return await apiCall('/loadLocatie.do', {locatie_id: locationId});
 }
 
-export const createTicket = async (description, assetId, locationId, lat, long, email, userName) => {
+export const createTicket = async (description, assetId, locationId, lat, long, email, userName, specializare) => {
     if (description.length && (assetId || locationId) && lat && long) {
         const data = {
             status: 1,
             text: description,
             latitude: lat,
             longitude: long,
+            ...(specializare ? {specializare_id: specializare} : {}),
             ...(assetId ? {asset_id: assetId} : {}),
             ...(locationId ? {locatie_id: locationId} : {}),
             ...(email ? {email_guest: email} : {}),
