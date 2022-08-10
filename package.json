@@ -34,7 +34,7 @@
       "react-app/jest"
     ]
   },
-  "proxy": "http://staging.mentdrive.ro:8080",
+  "proxy": "http://stb.mentdrive.ro:8080",
   "browserslist": {
     "production": [
       ">0.2%",

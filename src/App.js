@@ -214,20 +214,6 @@ const App = () => {
   )));
 
   useEffect(() => {
-    if (setupOk) {
-      const loadData = async () => {
-        const data = await loadSpecializari();
-        console.log(data, data.list);
-        if (data && data.list) {
-          setSpecializari(data.list);
-        }
-      }
-
-      loadData();
-    }
-  }, [setupOk]);
-
-  useEffect(() => {
     const parsed = queryString.parse(window.location.search);
     const setup = async () => {
       const loginStatus = await defaultLogin();
@@ -235,6 +221,12 @@ const App = () => {
         setSetupOk(false);
 
         return ;
+      }
+
+      const data = await loadSpecializari();
+      console.log(data, data.list);
+      if (data && data.list) {
+        setSpecializari(data.list);
       }
 
       onMapLoad();
