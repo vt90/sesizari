@@ -66,9 +66,9 @@ export const createTicket = async (description, assetId, locationId, lat, long, 
     }
 }
 
-export const uploadTicketImg = async (ticket, file) => {
+export const uploadTicketImg = async (ticket, file, index = 0) => {
     let data = new FormData();
-    data.append('ticket_id', ticket);
+    data.append('ticket_id', `${ticket}${parseInt(index, 10) !== 0 ? `_i_${index}` : ''}`);
     data.append('file', file);
 
     const url = '/uploadTicketImage.do';

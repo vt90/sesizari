@@ -22,9 +22,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import {createTheme, ThemeProvider, styled, responsiveFontSizes} from '@mui/material/styles';
 import AddAPhoto from '@mui/icons-material/AddAPhoto';
 import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
-import RoomIcon from '@mui/icons-material/Room';
+// import RoomIcon from '@mui/icons-material/Room';
 import Modal from '@mui/material/Modal';
-import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
+// import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
 import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode, loadSpecializari} from './api/backend';
 import TermsModal from './TermsModal';
 import './styles.css';
@@ -53,6 +53,11 @@ const modalStyle = {
   p: 4,
 };
 
+const LocationNamesList = [
+  'București', 'Buftea', 'Bragadiru', 'Chitila', 'Magurele', 'Otopeni', 'Pantelimon', 'Popesti - Leordeni', 'Voluntari', '1 Decembrie', 'Afumati', 
+  'Balotesti', 'Berceni', 'Branesti', 'Cernica', 'Chiajna', 'Ciolpani', 'Ciorogarla', 'Clinceni', 'Corbeanca', 'Copaceni', 'Dobroesti', 'Dragomiresti',
+  'Găneasa', 'Glina', 'Grădiștea', 'Gruiu', 'Jilava', 'Moara Vlasiei', 'Mogosoaia', 'Nuci', 'Peris', 'Petrachioaia', 'Snagov', 'Stefanestii de Jos', 'Tunari', 'Vidra'
+];
 
 
 function createShadow(px) {
@@ -113,7 +118,7 @@ theme = responsiveFontSizes(theme)
 
 const [lat, lng] = [46.770302, 23.578357];
 
-let fileToUpload = null;
+let filesToUpload = [];
 
 const App = () => {
 
@@ -136,6 +141,10 @@ const App = () => {
   const [oldTicket, setOldTicket] = useState(null);
   const [termsChecked, setTermsChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [locationName, setLocationName] = useState('');
+  const [locationLine, setLocationLine] = useState('');
+  const [locationStation, setLocationStation] = useState('');
+  const [showLocationDetailsForm, setShowLocationDetailsForm] = useState(false);
 
   const handleOpen = () => setModalOpen(true);
   const handleClose = () => setModalOpen(false);
@@ -145,7 +154,7 @@ const App = () => {
 
     for (let file of ev.target.files) {
       files.push(URL.createObjectURL(file));
-      fileToUpload = file;
+      filesToUpload.push(file);
     }
 
     setFiles(files);
@@ -155,6 +164,9 @@ const App = () => {
     navigator?.geolocation.getCurrentPosition(
       ({ coords: { latitude: lat, longitude: lng } }) => {
         setLatLong([lat, lng]);
+      }, (error) => {
+        setShowLocationDetailsForm(true);
+        setLocationName('București');
       }
     );
   };
@@ -176,7 +188,8 @@ const App = () => {
 
   useEffect(() => {
     const submit = async () => {
-      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName, specializare);
+      const newDescription = `${locationName ? `Localitate: ${locationName}\n` : ''}Linie: ${locationLine}\nStatie: ${locationStation}\n\n${description}`;
+      const res = await createTicket(newDescription, assetId, locationId, latLong[0], latLong[1], email, userName, specializare);
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
@@ -185,9 +198,16 @@ const App = () => {
         setUserName('');
         setEmail('');
         setShowPerson('da');
-        if (fileToUpload) {
-          await uploadTicketImg(res.ticket_id, fileToUpload);
+        setSpecializare(0);
+        if (filesToUpload && filesToUpload.length) {
+          for (const fileIndex in filesToUpload) {
+            if (fileIndex < 3) {
+              await uploadTicketImg(res.ticket_id, filesToUpload[fileIndex], fileIndex);
+            }
+          }
         }
+
+        setFiles([]);
       }
     }
     if (activeStep === 2 && !ticketInfo) {
@@ -201,17 +221,17 @@ const App = () => {
     // eslint-disable-next-line
   }, [activeStep]);
 
-  const MapComponent = withScriptjs(withGoogleMap((props) => (
-      <GoogleMap
-          defaultZoom={18}
-          onClick={ev => {
-            setLatLong([ev.latLng.lat(), ev.latLng.lng()]);
-          }}    
-          defaultCenter={{lat: latLong[0], lng: latLong[1]}}
-      >
-        <Marker position={{lat: latLong[0], lng: latLong[1]}}/>
-      </GoogleMap>
-  )));
+  // const MapComponent = withScriptjs(withGoogleMap((props) => (
+  //     <GoogleMap
+  //         defaultZoom={18}
+  //         onClick={ev => {
+  //           setLatLong([ev.latLng.lat(), ev.latLng.lng()]);
+  //         }}    
+  //         defaultCenter={{lat: latLong[0], lng: latLong[1]}}
+  //     >
+  //       <Marker position={{lat: latLong[0], lng: latLong[1]}}/>
+  //     </GoogleMap>
+  // )));
 
   useEffect(() => {
     const parsed = queryString.parse(window.location.search);
@@ -224,7 +244,6 @@ const App = () => {
       }
 
       const data = await loadSpecializari();
-      console.log(data, data.list);
       if (data && data.list) {
         setSpecializari(data.list);
       }
@@ -236,8 +255,8 @@ const App = () => {
           setAssetId(assetAndLocation.asset.asset_id);
         }
 
+        setLocation(`${assetAndLocation.asset.clasa_asset_nume} ${assetAndLocation.asset.nume}`);
         if (assetAndLocation.location && assetAndLocation.location.nume) {
-          setLocation(assetAndLocation.location.nume);
           setLocationId(assetAndLocation.location.locatie_id);
           
           if (assetAndLocation.location.lat && assetAndLocation.location.lon) {
@@ -282,12 +301,12 @@ const App = () => {
       content: (
           <>
             <Box mb={2}>
-              <MapComponent
+              {/* <MapComponent
                   googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyDTr0t1pqHwjXrF1s-Mn4zeyznMwdKDwQg&v"
                   loadingElement={<div style={{height: `100%`}}/>}
                   containerElement={<div style={{height: `400px`}}/>}
                   mapElement={<div style={{height: `100%`}}/>}
-              />
+              /> */}
             </Box>
 
             <Typography variant="body1" color="textSecondary">
@@ -304,12 +323,12 @@ const App = () => {
     }, {
       content: (
           <>
-            <Box mb={2} display="flex" alignItems="center">
-              <Box mb={4}>
+            <Box mb={1} display="flex" flexDirection="column" alignItems="center">
+              {/* <Box mb={4}>
                 <Typography color="textSecondary"><RoomIcon fontSize="large"/></Typography>
               </Box>
-              &nbsp;
-              <Box>
+              &nbsp; */}
+              {/* <Box mb={1}> */}
                 <Typography variant="body2" color="textSecondary" gutterBottom={true}>
                   <strong>
                     {location} <br/>
@@ -317,8 +336,42 @@ const App = () => {
                   </strong>
                 </Typography>
 
-                <Button size="small" onClick={() => setActiveStep(0)}>Modifica Locatia</Button>
-              </Box>
+                {/* <Button size="small" onClick={() => setActiveStep(0)}>Modifica Locatia</Button> */}
+
+                {showLocationDetailsForm ? (
+                    <Select
+                      id="location-name"
+                      value={locationName}
+                      label="Localitate"
+                      style={{width: '100%'}}
+                      onChange={(event) => {
+                        setLocationName(event.target.value);
+                      }}
+                    >
+                      {LocationNamesList.map((_location) => 
+                        <MenuItem style={{background: 'white'}} key={_location} value={_location}>{_location}</MenuItem>
+                      )}
+                    </Select>
+                ) : null}
+                    <br />
+                    <TextField
+                          id="location-line"
+                          fullWidth
+                          value={locationLine}
+                          onChange={ev => setLocationLine(ev.target.value)}
+                          variant="outlined"
+                          placeholder="Linie"
+                      />
+                    <br />
+                    <TextField
+                          id="location-station"
+                          fullWidth
+                          value={locationStation}
+                          onChange={ev => setLocationStation(ev.target.value)}
+                          variant="outlined"
+                          placeholder="Statie"
+                      />
+              {/* </Box> */}
             </Box>
 
             <Divider/>
@@ -376,6 +429,7 @@ const App = () => {
               }
               <input
                   accept="image/*"
+                  multiple={true}
                   style={{display: 'none'}}
                   id="raised-button-file"
                   type="file"
@@ -383,7 +437,7 @@ const App = () => {
               />
               <label htmlFor="raised-button-file">
                 <Button startIcon={<AddAPhoto/>} variant="outlined" size="large" component="span">
-                  Adaugati fotografii
+                  Adaugati max 3 fotografii
                 </Button>
               </label>
             </Box>
@@ -539,7 +593,9 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 60 }} />
+                  <a rel="noreferrer" href="https://www.mentdrive.ro" target="_blank">
+                    <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 60 }} />
+                  </a>
                 </Box>
               </Box>
             </Box>
