@@ -17,18 +17,17 @@ import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import {createTheme, ThemeProvider, styled, responsiveFontSizes} from '@mui/material/styles';
 import AddAPhoto from '@mui/icons-material/AddAPhoto';
 import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
-// import RoomIcon from '@mui/icons-material/Room';
+import Autocomplete, {createFilterOptions} from '@mui/material/Autocomplete';
 import Modal from '@mui/material/Modal';
 // import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode, loadSpecializari} from './api/backend';
+import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode, loadSpecializari, loadAllAssets} from './api/backend';
 import TermsModal from './TermsModal';
 import './styles.css';
 import queryString from 'query-string';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const CustomGrid = styled(Grid)(({theme}) => ({
   alignItems: 'center',
@@ -116,8 +115,6 @@ let theme = createTheme({
 
 theme = responsiveFontSizes(theme)
 
-const [lat, lng] = [46.770302, 23.578357];
-
 let filesToUpload = [];
 
 const App = () => {
@@ -127,9 +124,13 @@ const App = () => {
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState([46.770302, 23.578357]);
   const [files, setFiles] = useState([]);
+  const [assetList, setAssetList] = useState([]);
   const [specializari, setSpecializari] = useState([]);
   const [setupOk, setSetupOk] = useState(true);
   const [description, setDescription] = useState('');
+  const [dateTime, setDateTime] = useState('');
+  const [personPhone, setPersonPhone] = useState('');
+  const [personAddress, setPersonAddress] = useState('');
   const [specializare, setSpecializare] = useState(0);
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
@@ -145,6 +146,13 @@ const App = () => {
   const [locationLine, setLocationLine] = useState('');
   const [locationStation, setLocationStation] = useState('');
   const [showLocationDetailsForm, setShowLocationDetailsForm] = useState(false);
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const filterOptions = createFilterOptions({
+    matchFrom: 'start',
+    stringify: (option) => option.nume,
+  });
+  
 
   const handleOpen = () => setModalOpen(true);
   const handleClose = () => setModalOpen(false);
@@ -188,8 +196,15 @@ const App = () => {
 
   useEffect(() => {
     const submit = async () => {
-      const newDescription = `${locationName ? `Localitate: ${locationName}\n` : ''}Linie: ${locationLine}\nStatie: ${locationStation}\n\n${description}`;
-      const res = await createTicket(newDescription, assetId, locationId, latLong[0], latLong[1], email, userName, specializare);
+      let newDescription = `${locationName ? `Localitate: ${locationName}\n` : ''}Linie: ${locationLine}\nStatie: ${locationStation}\n\n${description}\n\nAdresa domiciliu: ${personAddress}`;
+      if (personPhone && personPhone.length) {
+        newDescription = `${newDescription}\nNumar telefon: ${personPhone}`;
+      }
+      if (dateTime && dateTime.length) {
+        newDescription = `${newDescription}\nData si ora evenimentului: ${dateTime}`;
+      }
+      const token = await executeRecaptcha('createTicket');
+      const res = await createTicket(newDescription, assetId, locationId, latLong[0], latLong[1], email, userName, specializare, token);
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
@@ -197,8 +212,12 @@ const App = () => {
         setDescription('');
         setUserName('');
         setEmail('');
+        setPersonAddress('');
+        setPersonPhone('');
         setShowPerson('da');
         setSpecializare(0);
+        setLocationLine('');
+        setLocationStation('');
         if (filesToUpload && filesToUpload.length) {
           for (const fileIndex in filesToUpload) {
             if (fileIndex < 3) {
@@ -274,6 +293,13 @@ const App = () => {
           }
         }
       }
+
+      if (!parsed || !parsed.asset_id) {
+        const assets = await loadAllAssets();
+        if (assets && assets.length) {
+          setAssetList(assets);
+        }
+      }
     }
     
     setup();
@@ -331,12 +357,31 @@ const App = () => {
               {/* <Box mb={1}> */}
                 <Typography variant="body2" color="textSecondary" gutterBottom={true}>
                   <strong>
-                    {location} <br/>
-                    {lat}, {lng}
+                    {location}
                   </strong>
                 </Typography>
 
                 {/* <Button size="small" onClick={() => setActiveStep(0)}>Modifica Locatia</Button> */}
+
+                {assetList && assetList.length ? (
+                  <div className='autoselectWrapper'>
+                    <Autocomplete
+                      id="combo-box-demo"
+                      options={ assetList }
+                      disablePortal
+                      sx={{width: '100%'}}
+                      filterOptions={filterOptions}
+                      onChange={(_event, newValue) => {
+                        if (newValue && newValue.asset_id) {
+                          setAssetId(newValue.asset_id);
+                        }
+                      }}
+                      getOptionLabel={(option) => option.nume}
+                      renderInput={(params) => <TextField {...params} label="Selecteaza autobuz" />}
+                    />
+                  </div>
+                  
+                ) : null }
 
                 {showLocationDetailsForm ? (
                     <Select
@@ -386,7 +431,7 @@ const App = () => {
                 label="Tip problema"
                 style={{width: '100%'}}
                 onChange={(event) => {
-                  setSpecializare(event.target.value);
+                  setSpecializare(event.target.value)
                 }}
               >
                 {specializari.map((specializare) => 
@@ -398,7 +443,10 @@ const App = () => {
 
             <Box mt={2} mb={1}>
               <Typography variant="h5" paragraph={true}>
-                Ce doriti sa raportati?
+                Ce problema doriti sa raportati?
+              </Typography>
+              <Typography variant="body2" color="black">
+              Pentru a fi cat mai eficienti in rezolvarea problemei va rugam sa mentionati cat mai multe detalii despre incident (de exemplu: ora si data incidentului, linia, sensul de mers, numar card in cazul unui incident legat de plată etc.)
               </Typography>
               <TextField
                   id="description"
@@ -406,9 +454,23 @@ const App = () => {
                   fullWidth
                   variant="outlined"
                   value={description}
-                  onChange={ev => setDescription(ev.target.value)}
+                  onChange={ev => setDescription(ev.target.value.substring(0, 300))}
                   placeholder="Furnizati o descriere cat mai detaliata*"
                   minRows={5}
+              />
+            </Box>
+
+            <Box mt={2} mb={1}>
+              <Typography variant="h5" paragraph={true}>
+                Data si ora evenimentului
+              </Typography>
+              <TextField
+                  id="date-time"
+                  fullWidth
+                  value={dateTime}
+                  onChange={ev => setDateTime(ev.target.value)}
+                  variant="outlined"
+                  placeholder="Data si ora"
               />
             </Box>
 
@@ -443,33 +505,40 @@ const App = () => {
             </Box>
 
             <Box mt={2}>
-              <Typography variant="h5" paragraph={true}>
-                Doriti sa va trimitem informatii despre raport?
-              </Typography>
-              <ToggleButtonGroup color="primary" value={showPerson}
-                                 onChange={(_, newValue) => setShowPerson(newValue)} exclusive={true}>
-                <ToggleButton value={"da"}>
-                  Da
-                </ToggleButton>
-                <ToggleButton value={"nu"}>
-                  Nu
-                </ToggleButton>
-              </ToggleButtonGroup>
-
               <Collapse in={showPerson === 'da'}>
                 <>
                   <Box mb={1} mt={2}>
+                  <Typography variant="h5" paragraph={true}>
+                    Numele si prenume*
+                  </Typography>
                     <TextField
                         id="name"
                         fullWidth
                         value={userName}
                         onChange={ev => setUserName(ev.target.value)}
                         variant="outlined"
-                        placeholder="Numele dumneavoastra*"
+                        placeholder="Numele si prenume*"
+                    />
+                  </Box>
+
+                  <Box mb={1} mt={2}>
+                  <Typography variant="h5" paragraph={true}>
+                    Adresa domiciliu*
+                  </Typography>
+                    <TextField
+                        id="address"
+                        fullWidth
+                        value={personAddress}
+                        onChange={ev => setPersonAddress(ev.target.value)}
+                        variant="outlined"
+                        placeholder="Adresa domiciliu*"
                     />
                   </Box>
 
                   <Box mb={1}>
+                    <Typography variant="h5" paragraph={true}>
+                      Adresa de email*
+                    </Typography>
                     <TextField
                         id="email"
                         fullWidth
@@ -479,6 +548,20 @@ const App = () => {
                         onBlur={() => setEmailError(!/(.+)@(.+){2,}\.(.+){2,}/.test(email))}
                         variant="outlined"
                         placeholder="Adresa de email*"
+                    />
+                  </Box>
+
+                  <Box mb={1}>
+                    <Typography variant="h5" paragraph={true}>
+                      Numar de telefon
+                    </Typography>
+                    <TextField
+                        id="phone"
+                        fullWidth
+                        value={personPhone}
+                        onChange={ev => setPersonPhone(ev.target.value)}
+                        variant="outlined"
+                        placeholder="Numar de telefon"
                     />
                   </Box>
 
@@ -497,7 +580,7 @@ const App = () => {
           </>
       ),
       title: 'Raport',
-      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && termsChecked) || showPerson === 'nu'),
+      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && personAddress.length > 3 && termsChecked) || showPerson === 'nu'),
       canGoBack: () => true,
     }, {
       title: 'Status',
@@ -517,7 +600,11 @@ const App = () => {
           {oldTicket && oldTicket?.code ? (<Typography color="textSecondary" align="center">
             Sesizare #{oldTicket?.code} este in statusul: {oldTicket?.status === 2 ? 'rezolvata' : 'deschisa'}.<br />
             <br /><strong>Deschisa la data:</strong> {oldTicket?.created_date}
-            <br /><br /><strong>Descriere:</strong> {oldTicket?.text}
+            <br /><br /><strong>Descriere:</strong>
+                          {oldTicket?.text?.split('\n')?.map((item, key) => {
+                                return <span key={key}>{item}<br/></span>
+                          })}
+
           </Typography>) : null}
 
           {oldTicket && oldTicket?.step > 0 && oldTicket.step_logs && oldTicket.step_logs.length ? (<Typography color="textSecondary" align="center">

@@ -8,3 +8,13 @@
     font-weight: 900;
     src: local('Museo'), url(./fonts/MuseoSans-900.ttf) format('truetype');
 }
+
+.autoselectWrapper {
+    width: 100%;
+    z-index: 9999;
+    position: relative;
+}
+
+.MuiAutocomplete-popper {
+    background: white;
+}

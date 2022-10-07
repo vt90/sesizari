@@ -44,13 +44,22 @@ export const loadAsset = async (assetId) => {
     return {asset, location};
 }
 
+export const loadAllAssets = async (assetId) => {
+    const result =  await apiCall('/loadAssets.do', {asset_id: assetId});
+    if (result && result.total && result.list) {
+        return result.list;
+    }
+    return [];
+}
+
 export const loadLocatie = async (locationId) => {
     return await apiCall('/loadLocatie.do', {locatie_id: locationId});
 }
 
-export const createTicket = async (description, assetId, locationId, lat, long, email, userName, specializare) => {
+export const createTicket = async (description, assetId, locationId, lat, long, email, userName, specializare, token = "") => {
     if (description.length && (assetId || locationId) && lat && long) {
         const data = {
+            token: token,
             status: 1,
             text: description,
             latitude: lat,
