@@ -11,10 +11,13 @@
 
 .autoselectWrapper {
     width: 100%;
-    z-index: 9999;
     position: relative;
 }
 
 .MuiAutocomplete-popper {
+    background: white;
+}
+
+.MuiPopover-root {
     background: white;
 }

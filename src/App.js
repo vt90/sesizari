@@ -142,11 +142,12 @@ const App = () => {
   const [oldTicket, setOldTicket] = useState(null);
   const [termsChecked, setTermsChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [locationName, setLocationName] = useState('');
+  const [locationName, setLocationName] = useState('București');
   const [locationLine, setLocationLine] = useState('');
   const [locationStation, setLocationStation] = useState('');
-  const [showLocationDetailsForm, setShowLocationDetailsForm] = useState(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const showLocationDetailsForm = true;
 
   const filterOptions = createFilterOptions({
     matchFrom: 'start',
@@ -173,7 +174,6 @@ const App = () => {
       ({ coords: { latitude: lat, longitude: lng } }) => {
         setLatLong([lat, lng]);
       }, (error) => {
-        setShowLocationDetailsForm(true);
         setLocationName('București');
       }
     );
@@ -218,6 +218,8 @@ const App = () => {
         setSpecializare(0);
         setLocationLine('');
         setLocationStation('');
+        setDateTime('');
+        setLocationName('București');
         if (filesToUpload && filesToUpload.length) {
           for (const fileIndex in filesToUpload) {
             if (fileIndex < 3) {
@@ -345,7 +347,7 @@ const App = () => {
             </Typography>
           </>
       ),
-      canGoForward: () => !!location,
+      canGoForward: () => false,
     }, {
       content: (
           <>
@@ -365,6 +367,9 @@ const App = () => {
 
                 {assetList && assetList.length ? (
                   <div className='autoselectWrapper'>
+                    <Typography variant="h5" paragraph={true}>
+                      Selecteaza autobuz*
+                    </Typography>
                     <Autocomplete
                       id="combo-box-demo"
                       options={ assetList }
@@ -384,6 +389,10 @@ const App = () => {
                 ) : null }
 
                 {showLocationDetailsForm ? (
+                  <Box className='autoselectWrapper' sx={{width: '100%'}} mt={2} mb={1}>
+                    <Typography variant="h5" paragraph={true}>
+                      Localitate*
+                    </Typography>
                     <Select
                       id="location-name"
                       value={locationName}
@@ -397,25 +406,34 @@ const App = () => {
                         <MenuItem style={{background: 'white'}} key={_location} value={_location}>{_location}</MenuItem>
                       )}
                     </Select>
+                  </Box>
                 ) : null}
-                    <br />
-                    <TextField
-                          id="location-line"
-                          fullWidth
-                          value={locationLine}
-                          onChange={ev => setLocationLine(ev.target.value)}
-                          variant="outlined"
-                          placeholder="Linie"
-                      />
-                    <br />
-                    <TextField
-                          id="location-station"
-                          fullWidth
-                          value={locationStation}
-                          onChange={ev => setLocationStation(ev.target.value)}
-                          variant="outlined"
-                          placeholder="Statie"
-                      />
+                    <Box sx={{width: '100%'}} mt={2} mb={1}>
+                      <Typography variant="h5" paragraph={true}>
+                        Linie
+                      </Typography>
+                      <TextField
+                            id="location-line"
+                            fullWidth
+                            value={locationLine}
+                            onChange={ev => setLocationLine(ev.target.value)}
+                            variant="outlined"
+                            placeholder="Linie"
+                        />
+                    </Box>
+                    <Box sx={{width: '100%'}} mt={2} mb={1}>
+                      <Typography variant="h5" paragraph={true}>
+                        Statie
+                      </Typography>
+                      <TextField
+                            id="location-station"
+                            fullWidth
+                            value={locationStation}
+                            onChange={ev => setLocationStation(ev.target.value)}
+                            variant="outlined"
+                            placeholder="Statie"
+                        />
+                    </Box>
               {/* </Box> */}
             </Box>
 
@@ -423,12 +441,12 @@ const App = () => {
 
             <Box mt={2} mb={1}>
               <Typography variant="h5" paragraph={true}>
-                Tip problema
+                Tip problema*
               </Typography>
               <Select
                 id="tip-problema"
                 value={specializare}
-                label="Tip problema"
+                label="Tip problema*"
                 style={{width: '100%'}}
                 onChange={(event) => {
                   setSpecializare(event.target.value)
@@ -446,7 +464,7 @@ const App = () => {
                 Ce problema doriti sa raportati?
               </Typography>
               <Typography variant="body2" color="black">
-              Pentru a fi cat mai eficienti in rezolvarea problemei va rugam sa mentionati cat mai multe detalii despre incident (de exemplu: ora si data incidentului, linia, sensul de mers, numar card in cazul unui incident legat de plată etc.)
+                Pentru a fi cat mai eficienti in rezolvarea problemei va rugam sa mentionati cat mai multe detalii despre incident (de exemplu: sensul de mers, numar card in cazul unui incident legat de plată etc.)*
               </Typography>
               <TextField
                   id="description"
@@ -581,7 +599,7 @@ const App = () => {
       ),
       title: 'Raport',
       canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && personAddress.length > 3 && termsChecked) || showPerson === 'nu'),
-      canGoBack: () => true,
+      canGoBack: null
     }, {
       title: 'Status',
       content: <>
@@ -601,9 +619,9 @@ const App = () => {
             Sesizare #{oldTicket?.code} este in statusul: {oldTicket?.status === 2 ? 'rezolvata' : 'deschisa'}.<br />
             <br /><strong>Deschisa la data:</strong> {oldTicket?.created_date}
             <br /><br /><strong>Descriere:</strong>
-                          {oldTicket?.text?.split('\n')?.map((item, key) => {
+                          {oldTicket?.text?.length ? oldTicket?.text?.split('Adresa domiciliu')[0].split('\n').map((item, key) => {
                                 return <span key={key}>{item}<br/></span>
-                          })}
+                          }) : null}
 
           </Typography>) : null}
 
@@ -660,7 +678,7 @@ const App = () => {
                   &nbsp;
                   {stepInfo.canGoForward &&
                   <Button variant="contained" color="primary" disabled={!stepInfo.canGoForward()}
-                          onClick={() => setActiveStep(activeStep + 1)}>Inainte</Button>}
+                          onClick={() => setActiveStep(activeStep + 1)}>{activeStep === 1 ? 'Sesizare noua' : 'Inainte'}</Button>}
                 </Box>
               </CardContent>) : (
                 <Typography color="textSecondary" align="center">
