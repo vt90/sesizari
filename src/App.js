@@ -120,6 +120,7 @@ let filesToUpload = [];
 const App = () => {
 
   const [activeStep, setActiveStep] = useState(1);
+  const [onBackRemoveAssetFromUrl, setOnBackRemoveAssetFromUrl] = useState(false);
   const [showPerson, setShowPerson] = useState("da");
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState([46.770302, 23.578357]);
@@ -179,20 +180,20 @@ const App = () => {
     );
   };
 
-  useEffect(() => {
-    if (window.google && window.google.maps) {
-      const geocoder = new window.google.maps.Geocoder();
+  // useEffect(() => {
+  //   if (window.google && window.google.maps) {
+  //     const geocoder = new window.google.maps.Geocoder();
 
-      geocoder.geocode({ location: {
-        lat: parseFloat(latLong[0]),
-        lng: parseFloat(latLong[1]),
-      }}).then(response => {
-        if (response.results.length && response.results[0].formatted_address) {
-          setLocation(response.results[0].formatted_address);
-        }
-      });  
-    }
-  }, [latLong]);
+  //     geocoder.geocode({ location: {
+  //       lat: parseFloat(latLong[0]),
+  //       lng: parseFloat(latLong[1]),
+  //     }}).then(response => {
+  //       if (response.results.length && response.results[0].formatted_address) {
+  //         setLocation(response.results[0].formatted_address);
+  //       }
+  //     });  
+  //   }
+  // }, [latLong]);
 
   useEffect(() => {
     const submit = async () => {
@@ -229,14 +230,21 @@ const App = () => {
         }
 
         setFiles([]);
+        const parsed = queryString.parse(window.location.search);
+        if (parsed && parsed.asset_id) {
+          setOnBackRemoveAssetFromUrl(true);
+        }
       }
     }
-    if (activeStep === 2 && !ticketInfo) {
+    if (activeStep === 2 && !ticketInfo && !oldTicket) {
       submit();
     }
     if (activeStep !== 2) {
       setOldTicket(null);
       setSearchTicketNumber('');
+      if (onBackRemoveAssetFromUrl) {
+        window.location.search = "";
+      }
     }
 
     // eslint-disable-next-line
@@ -312,8 +320,8 @@ const App = () => {
       const resp = await searchTicketByCode(searchTicketNumber);
       if (resp && resp.list && resp.list.length) {
         setOldTicket(resp.list[0]);
-        setActiveStep(2);
         setTicketInfo(null);
+        setActiveStep(2);
       } else {
         alert("Cod tichet invalid");
       }
