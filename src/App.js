@@ -89,7 +89,7 @@ const shadows = [
 let theme = createTheme({
   palette: {
     primary: {
-      main: '#39b349',
+      main: '#2d8ab9',
       contrastText: '#FFFFFF',
     },
     text: {
@@ -459,7 +459,7 @@ const App = () => {
                         placeholder="Cautare tichet"
                     />
                 <Box display="flex" style={{width: '100%'}} justifyContent="left">
-                  <img alt="Eco Garden" src="/sesizari/eco-garden-logo.png" style={ { width: 126, height: 'auto', marginLeft: 15 } } />
+                  <img alt="Universitatea Tehnica Gheorghe Asachi Iasi" src="/sesizari/universitatea-logo.jpeg" style={ { height: 100, width: 'auto', marginLeft: 15 } } />
                 </Box>
               </Box>
               {setupOk ? (<CardContent>
@@ -506,8 +506,6 @@ const App = () => {
 
               <Box display="flex" justifyContent="center">
                 <Box>
-                  <img alt="Primaria Cluj Napoca" src="/sesizari/primaria-cluj.jpeg" style={{ width: 'auto', height: 106 }} />
-                  &nbsp;&nbsp;&nbsp;&nbsp;
                   <img alt="Mentdrive" src="/sesizari/logo-mentdrive.jpeg" style={{ width: 'auto', height: 106 }} />
                 </Box>
               </Box>
