@@ -44,7 +44,15 @@ export const loadLocatie = async (locationId) => {
     return await apiCall('/loadLocatie.do', {locatie_id: locationId});
 }
 
-export const createTicket = async (description, assetId, locationId, lat, long, email, userName) => {
+export const loadBeneficiar = async () => {
+    return await apiCall('/loadBeneficiar.do');
+}
+
+export const getUserInfo = async () => {
+    return await apiCall('/getUserInfo.do');
+}
+
+export const createTicket = async (description, assetId, locationId, lat, long, email, userName, dynamic_data = {}) => {
     if (description.length && (assetId || locationId) && lat && long) {
         const data = {
             status: 1,
@@ -55,6 +63,7 @@ export const createTicket = async (description, assetId, locationId, lat, long, 
             ...(locationId ? {locatie_id: locationId} : {}),
             ...(email ? {email_guest: email} : {}),
             ...(userName ? {name_guest: userName} : {}),
+            dynamic_data: JSON.stringify(dynamic_data),
         }
 
         return await apiCall('/saveTicket.do', data); 

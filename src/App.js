@@ -2,6 +2,12 @@ import React, {useState, useEffect} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormLabel from '@mui/material/FormLabel';
+import FormGroup from '@mui/material/FormGroup';
 import CardContent from '@mui/material/CardContent';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import Container from '@mui/material/Container';
@@ -23,7 +29,7 @@ import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
 import Modal from '@mui/material/Modal';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode} from './api/backend';
+import { defaultLogin, login, loadBeneficiar, getUserInfo, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode} from './api/backend';
 import TermsModal from './TermsModal';
 import './styles.css';
 import queryString from 'query-string';
@@ -116,11 +122,11 @@ let fileToUpload = null;
 const App = () => {
 
   const [activeStep, setActiveStep] = useState(1);
-  const [showPerson, setShowPerson] = useState("da");
+  const [showPerson, setShowPerson] = useState(process.env.REACT_APP_REQUIRE_LOGIN !== 'yes' ? "da" : "nu");
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState([46.770302, 23.578357]);
   const [files, setFiles] = useState([]);
-  const [setupOk, setSetupOk] = useState(true);
+  const [setupOk, setSetupOk] = useState(false);
   const [description, setDescription] = useState('');
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
@@ -132,6 +138,40 @@ const App = () => {
   const [oldTicket, setOldTicket] = useState(null);
   const [termsChecked, setTermsChecked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [beneficiar, setBeneficiar] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [passwordError, setPasswordError] = useState(false);
+  const [password, setPassword] = useState('');
+  const [dynamicFieldsData, setDynamicFieldsData] = useState({});
+  const [isErrorForDynamicField, setIsErrorForDynamicField] = useState(false);
+
+  const setDataForDynamicField = (fieldName, value) => {
+    setDynamicFieldsData({
+      ...dynamicFieldsData,
+      [fieldName]: value
+    });
+  }
+
+  const setComplexDataForDynamicField = (fieldName, path, value) => {
+    setDynamicFieldsData({
+      ...dynamicFieldsData,
+      [fieldName]: {
+        ...(dynamicFieldsData[fieldName] || {}),
+        [path]: value
+      }
+    });
+  }
+
+  const toggleValueFromDynamicField = (fieldName, value) => {
+    const values = dynamicFieldsData[fieldName] || [];
+
+    if (values.includes(value)) {
+      setDataForDynamicField(fieldName, values.filter(val => val !== value))
+    } else {
+      setDataForDynamicField(fieldName, [...new Set([ ...values, value])])
+    }
+  }
 
   const handleOpen = () => setModalOpen(true);
   const handleClose = () => setModalOpen(false);
@@ -172,7 +212,7 @@ const App = () => {
 
   useEffect(() => {
     const submit = async () => {
-      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName);
+      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName, dynamicFieldsData);
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
@@ -181,6 +221,7 @@ const App = () => {
         setUserName('');
         setEmail('');
         setShowPerson('da');
+        setDynamicFieldsData({});
         if (fileToUpload) {
           await uploadTicketImg(res.ticket_id, fileToUpload);
         }
@@ -197,6 +238,25 @@ const App = () => {
     // eslint-disable-next-line
   }, [activeStep]);
 
+  useEffect(() => {
+    if (beneficiar && beneficiar.screen_config_metadata && beneficiar.screen_config_metadata.length) {
+      const fields = beneficiar.screen_config_metadata.filter(field => field.entitate === "ticket");
+      if (fields.length) {
+        let isError = false;
+        fields.forEach(elem => {
+          if (elem.required && !dynamicFieldsData[elem.camp]) {
+            setIsErrorForDynamicField(true);
+            isError = true;
+          }
+        });
+
+        if (!isError) {
+          setIsErrorForDynamicField(false);
+        }
+      }
+    }
+  }, [beneficiar, dynamicFieldsData]);
+
   const MapComponent = withScriptjs(withGoogleMap((props) => (
       <GoogleMap
           defaultZoom={18}
@@ -209,13 +269,45 @@ const App = () => {
       </GoogleMap>
   )));
 
+  const loginUser = async () => {
+    if (email && email.length && password && password.length) {
+      const loginData = await login(email, password);
+      if (loginData && loginData.success) {
+        const beneficiarData = await loadBeneficiar();
+        setBeneficiar(beneficiarData);
+        setCurrentUser(loginData);
+        setSetupOk(true);
+        setEmail('');
+      } else {
+        alert("Invalid login");
+      }
+    }
+  }
 
   useEffect(() => {
     const parsed = queryString.parse(window.location.search);
     const setup = async () => {
-      const loginStatus = await defaultLogin();
-      if (!loginStatus) {
-        setSetupOk(false);
+      
+      if (!currentUser) {
+        if (process.env.REACT_APP_REQUIRE_LOGIN === 'yes') {
+          const beneficiarData = await loadBeneficiar();
+
+          if (beneficiarData && beneficiarData.success === false && beneficiarData.sessionTimeout) {
+            setNeedsLogin(true);
+            return;
+          } else {
+            const userInfo = await getUserInfo();
+            setBeneficiar(beneficiarData);
+            setCurrentUser(userInfo);
+            setSetupOk(true);
+          }
+        } else {
+          const loginData = await defaultLogin();
+          if (loginData) {
+            setCurrentUser(loginData);
+            setSetupOk(true);
+          }
+        }
 
         return ;
       }
@@ -235,8 +327,8 @@ const App = () => {
             setLatLong([parseFloat(assetAndLocation.location.lat), parseFloat(assetAndLocation.location.lon)]);
           }
         }
-      } else if (loginStatus && loginStatus.locatie_id) {
-        const location = await loadLocatie(loginStatus.locatie_id);
+      } else if (currentUser && currentUser.locatie_id) {
+        const location = await loadLocatie(currentUser.locatie_id);
         if (location && location.nume) {
           setLocation(location.nume);
           setLocationId(location.locatie_id);
@@ -249,7 +341,7 @@ const App = () => {
     }
     
     setup();
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const search = async () => {
@@ -330,6 +422,121 @@ const App = () => {
               />
             </Box>
 
+            {beneficiar && beneficiar.screen_config_metadata && beneficiar.screen_config_metadata.length && 
+              beneficiar.screen_config_metadata.filter(field => field.entitate === "ticket").sort((a, b) => a.order - b.order).map(field => {
+                if (field.type === "text") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}><TextField
+                      id={field.camp}
+                      fullWidth
+                      error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                      name={field.camp}
+                      value={dynamicFieldsData && dynamicFieldsData[field.camp]}
+                      onChange={ev => setDataForDynamicField(field.camp, ev.target.value)}
+                      variant="outlined"
+                      placeholder={`${field.label}${field.required ? '*' : ''}`}
+                  /></Box>);
+                }
+
+                if (field.type === "textarea") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}><TextField
+                      id={field.camp}
+                      fullWidth
+                      multiline
+                      error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                      value={dynamicFieldsData && dynamicFieldsData[field.camp]}
+                      onChange={ev => setDataForDynamicField(field.camp, ev.target.value)}
+                      variant="outlined"
+                      minRows={5}
+                      required={field.required}
+                      name={field.camp}
+                      placeholder={`${field.label}${field.required ? '*' : ''}`}
+                  /></Box>);
+                }
+
+                if (field.type === "select") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}><Select
+                    id={field.camp}
+                    fullWidth
+                    name={field.camp}
+                    error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                    required={field.required}
+                    value={dynamicFieldsData && dynamicFieldsData[field.camp]}
+                    placeholder={`${field.label}${field.required ? '*' : ''}`}
+                    onChange={ev => setDataForDynamicField(field.camp, ev.target.value)}
+                  >
+                    {(field.options || []).map(opt => <MenuItem style={{background: 'white'}} key={opt} value={opt}>{opt}</MenuItem>)}
+                  </Select></Box>);
+                }
+
+                if (field.type === "radio") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}>
+                      <FormLabel id={field.camp}>{field.label}{field.required ? '*' : ''}</FormLabel>
+                      <RadioGroup
+                        aria-labelledby={field.camp}
+                        name={field.camp}
+                        required={field.required}
+                        error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                        value={dynamicFieldsData && dynamicFieldsData[field.camp]}
+                        onChange={ev => setDataForDynamicField(field.camp, ev.target.value)}
+                      >
+                        {(field.options || []).map(opt => <FormControlLabel key={opt} control={<Radio />} value={opt} label={opt} />)}
+                      </RadioGroup>
+                  </Box>);
+                }
+
+                if (field.type === "checkbox") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}>
+                      <FormLabel fullWidth id={field.camp}>{field.label}{field.required ? '*' : ''}</FormLabel>
+                      <FormGroup>
+                      {(field.options || []).map(opt => <FormControlLabel key={opt} required={field.required} control={<Checkbox 
+                          value={opt}  fullWidth
+                          checked={dynamicFieldsData && dynamicFieldsData[field.camp] && dynamicFieldsData[field.camp].length && dynamicFieldsData[field.camp].includes(opt)}
+                          onChange={ev => toggleValueFromDynamicField(field.camp, ev.target.value)}
+                        />} label={opt} />)}
+                      </FormGroup>
+                  </Box>);
+                }
+
+                if (field.type === "start-end-date") {
+                  return (<Box key={`${field.camp}${field.label}`} mt={2} mb={1}>
+                    <FormLabel id={field.camp}>{field.label}{field.required ? '*' : ''}</FormLabel>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          id={field.camp}
+                          fullWidth
+                          required={field.required}
+                          error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                          name={field.camp}
+                          value={dynamicFieldsData && dynamicFieldsData[field.camp] && dynamicFieldsData[field.camp].start_date}
+                          onChange={ev => setComplexDataForDynamicField(field.camp, 'start_date', ev.target.value)}
+                          variant="outlined"
+                          placeholder={`${field.label}${field.required ? '*' : ''}`}
+                          type='date'
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          id={`${field.camp}-end`}
+                          fullWidth
+                          required={field.required}
+                          error={dynamicFieldsData && isErrorForDynamicField && field.required && !dynamicFieldsData[field.camp]}
+                          name={`${field.camp}-end`}
+                          value={dynamicFieldsData && dynamicFieldsData[field.camp] && dynamicFieldsData[field.camp].end_date}
+                          onChange={ev => setComplexDataForDynamicField(field.camp, 'end_date', ev.target.value)}
+                          variant="outlined"
+                          placeholder={`${field.label}${field.required ? '*' : ''}`}
+                          type='date'
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>);
+                }
+
+                return null;
+              })}
+
             <Box mt={2}>
               {
                 !!files?.length
@@ -359,62 +566,64 @@ const App = () => {
               </label>
             </Box>
 
-            <Box mt={2}>
-              <Typography variant="h5" paragraph={true}>
-                Doriti sa va trimitem informatii despre raport?
-              </Typography>
-              <ToggleButtonGroup color="primary" value={showPerson}
-                                 onChange={(_, newValue) => setShowPerson(newValue)} exclusive={true}>
-                <ToggleButton value={"da"}>
-                  Da
-                </ToggleButton>
-                <ToggleButton value={"nu"}>
-                  Nu
-                </ToggleButton>
-              </ToggleButtonGroup>
+            {process.env.REACT_APP_REQUIRE_LOGIN !== 'yes' ? (
+                <Box mt={2}>
+                  <Typography variant="h5" paragraph={true}>
+                    Doriti sa va trimitem informatii despre raport?
+                  </Typography>
+                  <ToggleButtonGroup color="primary" value={showPerson}
+                                    onChange={(_, newValue) => setShowPerson(newValue)} exclusive={true}>
+                    <ToggleButton value={"da"}>
+                      Da
+                    </ToggleButton>
+                    <ToggleButton value={"nu"}>
+                      Nu
+                    </ToggleButton>
+                  </ToggleButtonGroup>
 
-              <Collapse in={showPerson === 'da'}>
-                <>
-                  <Box mb={1} mt={2}>
-                    <TextField
-                        id="name"
-                        fullWidth
-                        value={userName}
-                        onChange={ev => setUserName(ev.target.value)}
-                        variant="outlined"
-                        placeholder="Numele dumneavoastra*"
-                    />
-                  </Box>
+                  <Collapse in={showPerson === 'da'}>
+                    <>
+                      <Box mb={1} mt={2}>
+                        <TextField
+                            id="name"
+                            fullWidth
+                            value={userName}
+                            onChange={ev => setUserName(ev.target.value)}
+                            variant="outlined"
+                            placeholder="Numele dumneavoastra*"
+                        />
+                      </Box>
 
-                  <Box mb={1}>
-                    <TextField
-                        id="email"
-                        fullWidth
-                        error={emailError}
-                        value={email}
-                        onChange={ev => setEmail(ev.target.value)}
-                        onBlur={() => setEmailError(!/(.+)@(.+){2,}\.(.+){2,}/.test(email))}
-                        variant="outlined"
-                        placeholder="Adresa de email*"
-                    />
-                  </Box>
+                      <Box mb={1}>
+                        <TextField
+                            id="email"
+                            fullWidth
+                            error={emailError}
+                            value={email}
+                            onChange={ev => setEmail(ev.target.value)}
+                            onBlur={() => setEmailError(!/(.+)@(.+){2,}\.(.+){2,}/.test(email))}
+                            variant="outlined"
+                            placeholder="Adresa de email*"
+                        />
+                      </Box>
 
-                  <Box mb={1}>
-                    <FormControlLabel 
-                      control={<Checkbox id="terms" checked={termsChecked} onChange={ev => setTermsChecked(ev.target.checked)} />}
-                      label="Sunt de acord cu următorii termeni și condiții:" />
-                      <Typography style={{cursor: 'pointer', textDecoration: 'underline', lineHeight: '42px'}} onClick={handleOpen} variant="body1" color="black">
-                        deschideți termeni și condiții
-                      </Typography>
-                      {/* <a style="" onClick={handleOpen} href="javascript: void(0)">deschide termeni și condiții</a> */}
-                  </Box>
-                </>
-              </Collapse>
-            </Box>
+                      <Box mb={1}>
+                        <FormControlLabel 
+                          control={<Checkbox id="terms" checked={termsChecked} onChange={ev => setTermsChecked(ev.target.checked)} />}
+                          label="Sunt de acord cu următorii termeni și condiții:" />
+                          <Typography style={{cursor: 'pointer', textDecoration: 'underline', lineHeight: '42px'}} onClick={handleOpen} variant="body1" color="black">
+                            deschideți termeni și condiții
+                          </Typography>
+                          {/* <a style="" onClick={handleOpen} href="javascript: void(0)">deschide termeni și condiții</a> */}
+                      </Box>
+                    </>
+                  </Collapse>
+                </Box>
+            ) : null}
           </>
       ),
       title: 'Raport',
-      canGoForward: () => description.length > 10 && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && termsChecked) || showPerson === 'nu'),
+      canGoForward: () => description.length > 10 && !isErrorForDynamicField && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && termsChecked) || showPerson === 'nu'),
       canGoBack: () => true,
     }, {
       title: 'Status',
@@ -451,13 +660,13 @@ const App = () => {
           <Box my={3} style={{ minHeight: 'calc(100vh - 188px)' }}>
             <Card elevation={12}>
               <Box display="flex" justifyContent="center" pt={2} pb={1}  style={{position: 'relative'}}>
-                  <input type="text"
+                {setupOk ? <input type="text"
                         id="ticket_search"
                         value={searchTicketNumber}
                         onChange={ev => setSearchTicketNumber(ev.target.value)}
                         style={{position: 'absolute', width: '90px', right: 10, top: 30, height: 20, padding: 5, border: '1px solid grey', borderRadius: '4px'}}
                         placeholder="Cautare tichet"
-                    />
+                    /> : null }
                 <Box display="flex" style={{width: '100%'}} justifyContent="left">
                   <img alt="Universitatea Tehnica Gheorghe Asachi Iasi" src="/sesizari/universitatea-logo.jpeg" style={ { height: 100, width: 'auto', marginLeft: 15 } } />
                 </Box>
@@ -489,9 +698,49 @@ const App = () => {
                           onClick={() => setActiveStep(activeStep + 1)}>Inainte</Button>}
                 </Box>
               </CardContent>) : (
-                <Typography color="textSecondary" align="center">
-                  Avem probleme in comunicarea cu serverul. Va rugam incercati mai tarziu.
-                </Typography>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  {needsLogin ? (
+                    <Box  style={{ maxWidth: '250px', width: '80%' }} display="flex" flexDirection={'column'} justifyContent="center">
+                      
+                        <Box mb={1}>
+                          <TextField
+                              id="email"
+                              fullWidth
+                              error={emailError}
+                              value={email}
+                              onChange={ev => setEmail(ev.target.value)}
+                              onBlur={() => setEmailError(email.length < 3)}
+                              variant="outlined"
+                              placeholder="Adresa de email*"
+                          />
+                        </Box>
+
+                        <Box mb={1}>
+                          <TextField
+                              id="password"
+                              fullWidth
+                              type='password'
+                              error={passwordError}
+                              value={password}
+                              onChange={ev => setPassword(ev.target.value)}
+                              onBlur={() => setPasswordError(password.length < 3)}
+                              variant="outlined"
+                              placeholder="Parola*"
+                          />
+                        </Box>
+
+                        <Box mb={1}>
+                          <Button variant="contained" color="primary" disabled={emailError || passwordError}
+                            onClick={() => loginUser()}>Log in</Button>
+                        </Box>
+                        <div style={{ height: '100px' }}></div>
+                    </Box>
+                  ) : (
+                    <Typography color="textSecondary" align="center">
+                      Avem probleme in comunicarea cu serverul. Va rugam incercati mai tarziu.
+                    </Typography>
+                  )}
+                </div>
               )}
             </Card>
           </Box>
