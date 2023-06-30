@@ -40,6 +40,42 @@ export const loadAsset = async (assetId) => {
     return {asset, location};
 }
 
+export const loadLocations = async () => {
+    const locations =  await apiCall('/loadLocatii.do');
+    if (locations && locations.list) {
+        return locations.list;
+    }
+
+    return [];
+}
+
+export const loadAssetsByLocation = async (locationId) => {
+    const assets = await apiCall('/loadAssetsByLocatie.do', {locatie_id: [locationId]});
+    if (assets && assets.list) {
+        return assets.list;
+    }
+
+    return [];
+}
+
+export const loadComponentsByAssetId = async (assetId) => {
+    const components = await apiCall('/loadComponentsByAssetId.do', {asset_id: assetId});
+    if (components && components.components) {
+        return components.components;
+    }
+
+    return [];
+}
+
+export const loadSpecializari = async () => {
+    const specializari =  await apiCall('/loadSpecializari.do');
+    if (specializari && specializari.list) {
+        return specializari.list;
+    }
+
+    return [];
+}
+
 export const loadLocatie = async (locationId) => {
     return await apiCall('/loadLocatie.do', {locatie_id: locationId});
 }
@@ -52,17 +88,20 @@ export const getUserInfo = async () => {
     return await apiCall('/getUserInfo.do');
 }
 
-export const createTicket = async (description, assetId, locationId, lat, long, email, userName, dynamic_data = {}) => {
+export const createTicket = async (description, assetId, locationId, lat, long, email, userName, componentId, specializareId, level, dynamic_data = {}) => {
     if (description.length && (assetId || locationId) && lat && long) {
         const data = {
             status: 1,
             text: description,
             latitude: lat,
             longitude: long,
+            level,
             ...(assetId ? {asset_id: assetId} : {}),
             ...(locationId ? {locatie_id: locationId} : {}),
             ...(email ? {email_guest: email} : {}),
             ...(userName ? {name_guest: userName} : {}),
+            ...(componentId ? {component_id: componentId} : {}),
+            ...(specializareId ? {specializare_id: specializareId} : {}),
             dynamic_data: JSON.stringify(dynamic_data),
         }
 

@@ -20,6 +20,8 @@ import StepButton from '@mui/material/StepButton';
 import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
 import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -29,10 +31,13 @@ import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
 import Modal from '@mui/material/Modal';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, login, loadBeneficiar, getUserInfo, loadAsset, loadLocatie , createTicket, uploadTicketImg, searchTicketByCode} from './api/backend';
+import { defaultLogin, login, loadBeneficiar, getUserInfo, loadAsset, loadLocatie, 
+    createTicket, uploadTicketImg, searchTicketByCode, loadLocations, 
+    loadAssetsByLocation, loadComponentsByAssetId, loadSpecializari} from './api/backend';
 import TermsModal from './TermsModal';
 import './styles.css';
 import queryString from 'query-string';
+import LocationsTree from './LocationsTree';
 
 const CustomGrid = styled(Grid)(({theme}) => ({
   alignItems: 'center',
@@ -133,6 +138,8 @@ const App = () => {
   const [searchTicketNumber, setSearchTicketNumber] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [assetId, setAssetId] = useState(null);
+  const [componentId, setComponentId] = useState(null);
+  const [specializareId, setSpecializareId] = useState(null);
   const [locationId, setLocationId] = useState(null);
   const [ticketInfo, setTicketInfo] = useState(null);
   const [oldTicket, setOldTicket] = useState(null);
@@ -145,6 +152,13 @@ const App = () => {
   const [password, setPassword] = useState('');
   const [dynamicFieldsData, setDynamicFieldsData] = useState({});
   const [isErrorForDynamicField, setIsErrorForDynamicField] = useState(false);
+  const [locationList, setLocationList] = useState([]);
+  const [showAllLocations, setShowAllLocations] = useState(false);
+  const [assetList, setAssetList] = useState([]);
+  const [componentList, setComponentList] = useState([]);
+  const [specializariList, setSpecializariList] = useState([]);
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [urgentLabel, setUrgentLabel] = useState('');
 
   const setDataForDynamicField = (fieldName, value) => {
     setDynamicFieldsData({
@@ -195,24 +209,57 @@ const App = () => {
     );
   };
 
-  useEffect(() => {
-    if (window.google && window.google.maps) {
-      const geocoder = new window.google.maps.Geocoder();
+  const updateLocation = (newLocationId) => {
+    const locationData = locationList.find(loc => loc.locatie_id === parseInt(newLocationId, 10))
+    setLocation(locationData.nume);
+    setLocationId(locationData.locatie_id);
+    setShowAllLocations(false);
+    setAssetId(null);
+  }
 
-      geocoder.geocode({ location: {
-        lat: parseFloat(latLong[0]),
-        lng: parseFloat(latLong[1]),
-      }}).then(response => {
-        if (response.results.length && response.results[0].formatted_address) {
-          setLocation(response.results[0].formatted_address);
-        }
-      });  
+  useEffect(() => {
+    const loadAssets = async () => {
+      const data = await loadAssetsByLocation(locationId);
+
+      setAssetList(data);
     }
-  }, [latLong]);
+
+    if (locationId >= 0) {
+      loadAssets();
+    }
+  }, [locationId]);
+
+  useEffect(() => {
+    const loadComponents = async () => {
+      setComponentId(null);
+      const comp = await loadComponentsByAssetId(assetId);
+
+      setComponentList(comp);
+    }
+
+    if (assetId >= 0) {
+      loadComponents();
+    }
+  }, [assetId]);
+
+  // useEffect(() => {
+  //   if (window.google && window.google.maps) {
+  //     const geocoder = new window.google.maps.Geocoder();
+
+  //     geocoder.geocode({ location: {
+  //       lat: parseFloat(latLong[0]),
+  //       lng: parseFloat(latLong[1]),
+  //     }}).then(response => {
+  //       if (response.results.length && response.results[0].formatted_address) {
+  //         setLocation(response.results[0].formatted_address);
+  //       }
+  //     });  
+  //   }
+  // }, [latLong]);
 
   useEffect(() => {
     const submit = async () => {
-      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName, dynamicFieldsData);
+      const res = await createTicket(description, assetId, locationId, latLong[0], latLong[1], email, userName, componentId, specializareId, isUrgent ? 3 : 2, dynamicFieldsData);
 
       if (res && res.ticket_id) {
         setTicketInfo(res);
@@ -222,6 +269,11 @@ const App = () => {
         setEmail('');
         setShowPerson('da');
         setDynamicFieldsData({});
+        setAssetId(null);
+        setComponentId(null);
+        setSpecializareId(null);
+        setTermsChecked(false);
+        setIsUrgent(false);
         if (fileToUpload) {
           await uploadTicketImg(res.ticket_id, fileToUpload);
         }
@@ -247,6 +299,10 @@ const App = () => {
           if (elem.required && !dynamicFieldsData[elem.camp]) {
             setIsErrorForDynamicField(true);
             isError = true;
+          }
+
+          if (elem.type === 'label' && elem.camp === 'level') {
+            setUrgentLabel(elem.label);
           }
         });
 
@@ -338,6 +394,10 @@ const App = () => {
           }
         }
       }
+
+      setLocationList(await loadLocations());
+
+      setSpecializariList(await loadSpecializari());
     }
     
     setup();
@@ -405,6 +465,117 @@ const App = () => {
             </Box>
 
             <Divider/>
+
+            {
+              locationList.length > 0 && (<Box mt={2} mb={1}>
+                <Typography variant="h5" paragraph={true} onClick={() => setShowAllLocations(true)}>
+                  Selectati locatia
+                </Typography>
+                
+                {showAllLocations ? (
+                  <Collapse in={showAllLocations}>
+                    <FormControlLabel control={<Checkbox
+                        value={beneficiar.locatie_id}
+                        checked={beneficiar.locatie_id === locationId}
+                        onChange={ev => updateLocation(ev.target.value)}
+                    />} label={location} />
+                    <div style={{paddingLeft: '20px'}}>
+                      <LocationsTree locationList={locationList} rootParent={currentUser.locatie_id || 0} selectedLocationId={locationId} setLocationField={updateLocation}  />
+                    </div>
+                  </Collapse>
+                ) : (
+                  <>
+                      <TextField
+                        id="locationfield"
+                        fullWidth
+                        variant="outlined"
+                        value={location}
+                        onClick={ev => setShowAllLocations(true)}
+                        placeholder={location}
+                    />
+                  </>
+                )}
+              </Box>)
+            }
+
+            {
+              assetList.length > 0 && (
+                <Box mt={2} mb={1}>
+                  <Typography variant="h5" paragraph={true}>
+                    Selectati camera/echipamentul:
+                  </Typography>
+                  <Select
+                    id={'assetId'}
+                    fullWidth
+                    name={'assetId'}
+                    error={!assetId}
+                    required={true}
+                    value={assetId}
+                    placeholder={'Selectati camera/echipamentul'}
+                    onChange={ev => setAssetId(ev.target.value)}
+                  >
+                    {(assetList || []).map(asset => <MenuItem style={{background: 'white'}} key={asset.asset_id} value={asset.asset_id}>{asset.nume}</MenuItem>)}
+                  </Select>
+                </Box>
+              )
+            }
+
+            {
+              assetList.length > 0 && componentList.length > 0 && (
+                <Box mt={2} mb={1}>
+                  <Typography variant="h5" paragraph={true}>
+                    Selectati componenta
+                  </Typography>
+                  <Select
+                    id={'componentId'}
+                    fullWidth
+                    name={'componentId'}
+                    required={false}
+                    value={componentId}
+                    placeholder={'Selectati componenta'}
+                    onChange={ev => setComponentId(ev.target.value)}
+                  >
+                    {(componentList || []).map(component => <MenuItem style={{background: 'white'}} key={component.component_id} value={component.component_id}>{component.component_description}</MenuItem>)}
+                  </Select>
+                </Box>
+              )
+            }
+
+            {
+              specializariList.length > 0 && (
+                <Box mt={2} mb={1}>
+                  <Typography variant="h5" paragraph={true}>
+                    Selectati specializarea:
+                  </Typography>
+                  <Select
+                    id={'specializareId'}
+                    fullWidth
+                    name={'specializareId'}
+                    required={true}
+                    value={specializareId}
+                    placeholder={'Selectati specializarea'}
+                    onChange={ev => setSpecializareId(ev.target.value)}
+                  >
+                    {(specializariList || []).map(spec => <MenuItem style={{background: 'white'}} key={spec.specializare_id} value={spec.specializare_id}>{spec.nume}</MenuItem>)}
+                  </Select>
+                </Box>
+              )
+            }
+
+            <Box mt={2} mb={1}>
+              <FormControl sx={{ m: 3 }} error={isUrgent && urgentLabel.length > 0} variant="standard">
+                <Typography variant="h5" paragraph={true}>
+                  Urgenta?
+                  &nbsp;&nbsp;&nbsp;
+                  <FormControlLabel control={<Checkbox
+                          value={isUrgent}
+                          checked={isUrgent}
+                          onChange={ev => setIsUrgent(!isUrgent)}
+                      />} label={'Da'} />
+                </Typography>
+                {isUrgent && urgentLabel && urgentLabel.length && (<FormHelperText sx={{ whiteSpace: 'pre-line'}}>{urgentLabel}</FormHelperText>)}
+              </FormControl>
+            </Box>
 
             <Box mt={2} mb={1}>
               <Typography variant="h5" paragraph={true}>
