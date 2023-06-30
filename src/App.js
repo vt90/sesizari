@@ -607,23 +607,23 @@ const App = () => {
                         />
                       </Box>
 
-                      <Box mb={1}>
-                        <FormControlLabel 
-                          control={<Checkbox id="terms" checked={termsChecked} onChange={ev => setTermsChecked(ev.target.checked)} />}
-                          label="Sunt de acord cu următorii termeni și condiții:" />
-                          <Typography style={{cursor: 'pointer', textDecoration: 'underline', lineHeight: '42px'}} onClick={handleOpen} variant="body1" color="black">
-                            deschideți termeni și condiții
-                          </Typography>
-                          {/* <a style="" onClick={handleOpen} href="javascript: void(0)">deschide termeni și condiții</a> */}
-                      </Box>
                     </>
                   </Collapse>
                 </Box>
             ) : null}
+                <Box mb={1} mt={3}>
+                  <FormControlLabel 
+                    control={<Checkbox id="terms" checked={termsChecked} onChange={ev => setTermsChecked(ev.target.checked)} />}
+                    label="Sunt de acord cu următorii termeni și condiții:" />
+                    <Typography style={{cursor: 'pointer', textDecoration: 'underline', lineHeight: '42px'}} onClick={handleOpen} variant="body1" color="black">
+                      deschideți termeni și condiții
+                    </Typography>
+                    {/* <a style="" onClick={handleOpen} href="javascript: void(0)">deschide termeni și condiții</a> */}
+                </Box>
           </>
       ),
       title: 'Raport',
-      canGoForward: () => description.length > 10 && !isErrorForDynamicField && !emailError && ((showPerson === 'da' && email.length > 5 && userName.length > 3 && termsChecked) || showPerson === 'nu'),
+      canGoForward: () => description.length > 10 && !isErrorForDynamicField && !emailError && termsChecked && ((showPerson === 'da' && email.length > 5 && userName.length > 3) || showPerson === 'nu'),
       canGoBack: () => true,
     }, {
       title: 'Status',
