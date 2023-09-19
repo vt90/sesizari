@@ -30,8 +30,9 @@ import AddAPhoto from '@mui/icons-material/AddAPhoto';
 import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import RoomIcon from '@mui/icons-material/Room';
 import Modal from '@mui/material/Modal';
+import { useAuth } from 'oidc-react';
 import {GoogleMap, Marker, withGoogleMap, withScriptjs} from "react-google-maps";
-import { defaultLogin, login, loadBeneficiar, getUserInfo, loadAsset, loadLocatie, 
+import { defaultLogin, login, loginWithOpenId, loadBeneficiar, getUserInfo, loadAsset, loadLocatie, 
     createTicket, uploadTicketImg, searchTicketByCode, loadLocations, 
     loadAssetsByLocation, loadComponentsByAssetId, loadSpecializari} from './api/backend';
 import TermsModal from './TermsModal';
@@ -159,6 +160,8 @@ const App = () => {
   const [specializariList, setSpecializariList] = useState([]);
   const [isUrgent, setIsUrgent] = useState(false);
   const [urgentLabel, setUrgentLabel] = useState('');
+
+  const oauth = useAuth();
 
   const setDataForDynamicField = (fieldName, value) => {
     setDynamicFieldsData({
@@ -341,6 +344,24 @@ const App = () => {
   }
 
   useEffect(() => {
+    const autoLoginWithOpenId = async (token) => {
+      const loginData = await loginWithOpenId(token);
+      if (loginData && loginData.success) {
+        const beneficiarData = await loadBeneficiar();
+        setBeneficiar(beneficiarData);
+        setCurrentUser(loginData);
+        setSetupOk(true);
+        setEmail('');
+      } else {
+        alert("Invalid login");
+      }
+    }
+    if (oauth.userData && oauth.userData.access_token) {
+      autoLoginWithOpenId(oauth.userData.access_token);
+    }
+  }, [oauth.userData]);
+
+  useEffect(() => {
     const parsed = queryString.parse(window.location.search);
     const setup = async () => {
       
@@ -460,7 +481,7 @@ const App = () => {
                   </strong>
                 </Typography>
 
-                <Button size="small" onClick={() => setActiveStep(0)}>Modifica Locatia</Button>
+                <Button size="small" onClick={() => setActiveStep(0)}>Modifică Locația</Button>
               </Box>
             </Box>
 
@@ -469,7 +490,7 @@ const App = () => {
             {
               locationList.length > 0 && (<Box mt={2} mb={1}>
                 <Typography variant="h5" paragraph={true} onClick={() => setShowAllLocations(true)}>
-                  Selectati locatia
+                  Selectați locația
                 </Typography>
                 
                 {showAllLocations ? (
@@ -502,7 +523,7 @@ const App = () => {
               assetList.length > 0 && (
                 <Box mt={2} mb={1}>
                   <Typography variant="h5" paragraph={true}>
-                    Selectati camera/echipamentul:
+                    Selectați camera/echipamentul:
                   </Typography>
                   <Select
                     id={'assetId'}
@@ -511,7 +532,7 @@ const App = () => {
                     error={!assetId}
                     required={true}
                     value={assetId}
-                    placeholder={'Selectati camera/echipamentul'}
+                    placeholder={'Selectați camera/echipamentul:'}
                     onChange={ev => setAssetId(ev.target.value)}
                   >
                     {(assetList || []).map(asset => <MenuItem style={{background: 'white'}} key={asset.asset_id} value={asset.asset_id}>{asset.nume}</MenuItem>)}
@@ -524,7 +545,7 @@ const App = () => {
               assetList.length > 0 && componentList.length > 0 && (
                 <Box mt={2} mb={1}>
                   <Typography variant="h5" paragraph={true}>
-                    Selectati componenta
+                    Selectați componenta
                   </Typography>
                   <Select
                     id={'componentId'}
@@ -532,7 +553,7 @@ const App = () => {
                     name={'componentId'}
                     required={false}
                     value={componentId}
-                    placeholder={'Selectati componenta'}
+                    placeholder={'Selectați componenta'}
                     onChange={ev => setComponentId(ev.target.value)}
                   >
                     {(componentList || []).map(component => <MenuItem style={{background: 'white'}} key={component.component_id} value={component.component_id}>{component.component_description}</MenuItem>)}
@@ -545,7 +566,7 @@ const App = () => {
               specializariList.length > 0 && (
                 <Box mt={2} mb={1}>
                   <Typography variant="h5" paragraph={true}>
-                    Selectati specializarea:
+                    Selectați specializarea:
                   </Typography>
                   <Select
                     id={'specializareId'}
@@ -553,7 +574,7 @@ const App = () => {
                     name={'specializareId'}
                     required={true}
                     value={specializareId}
-                    placeholder={'Selectati specializarea'}
+                    placeholder={'Selectați specializarea'}
                     onChange={ev => setSpecializareId(ev.target.value)}
                   >
                     {(specializariList || []).map(spec => <MenuItem style={{background: 'white'}} key={spec.specializare_id} value={spec.specializare_id}>{spec.nume}</MenuItem>)}
@@ -565,7 +586,7 @@ const App = () => {
             <Box mt={2} mb={1}>
               <FormControl sx={{ m: 3 }} error={isUrgent && urgentLabel.length > 0} variant="standard">
                 <Typography variant="h5" paragraph={true}>
-                  Urgenta?
+                  Urgență?
                   &nbsp;&nbsp;&nbsp;
                   <FormControlLabel control={<Checkbox
                           value={isUrgent}
@@ -579,7 +600,7 @@ const App = () => {
 
             <Box mt={2} mb={1}>
               <Typography variant="h5" paragraph={true}>
-                Ce doriti sa raportati?
+                Ce doriți să raportați?
               </Typography>
               <TextField
                   id="description"
@@ -588,7 +609,7 @@ const App = () => {
                   variant="outlined"
                   value={description}
                   onChange={ev => setDescription(ev.target.value)}
-                  placeholder="Furnizati o descriere cat mai detaliata*"
+                  placeholder="Furnizați o descriere cât mai detaliată*"
                   minRows={5}
               />
             </Box>
@@ -732,7 +753,7 @@ const App = () => {
               />
               <label htmlFor="raised-button-file">
                 <Button startIcon={<AddAPhoto/>} variant="outlined" size="large" component="span">
-                  Adaugati fotografii
+                  Adăugați fotografii
                 </Button>
               </label>
             </Box>
@@ -740,7 +761,7 @@ const App = () => {
             {process.env.REACT_APP_REQUIRE_LOGIN !== 'yes' ? (
                 <Box mt={2}>
                   <Typography variant="h5" paragraph={true}>
-                    Doriti sa va trimitem informatii despre raport?
+                    Doriți să va trimitem informații despre raport?
                   </Typography>
                   <ToggleButtonGroup color="primary" value={showPerson}
                                     onChange={(_, newValue) => setShowPerson(newValue)} exclusive={true}>

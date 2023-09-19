@@ -6,7 +6,7 @@ const TermsModal = () => (
             POLITICA DE CONFIDENTIALITATE
         </Typography>
         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Acest site este deținut și administrat de Universitatea Tehnica Gheorghe Asachi. Ne angajăm să protejăm confidențialitatea vizitatorilor noștri în timp ce interacționează cu conținutul, produsele și serviciile de pe acest site (“https://www.ecogardenconstruct.com”). Această politică de confidențialitate se aplică numai site-ului Web. Nu se aplică și altor site-uri web la care ne referim. Deoarece colectăm anumite tipuri de informații despre utilizatorii noștri, vrem să înțelegeți ce informații colectăm despre dvs., cum le colectăm, cum sunt folosite aceste informații și cum puteți controla circuitul informatiilor dvs. Sunteți de acord că utilizarea de către dvs. a site-ului înseamnă aprobarea dvs. față de această Politică de confidențialitate. Dacă nu sunteți de acord cu această Politică de confidențialitate, vă rugăm să nu utilizați site-ul Web.
+            Acest site este deținut și administrat de Universitatea Tehnica Gheorghe Asachi. Ne angajăm să protejăm confidențialitatea vizitatorilor noștri în timp ce interacționează cu conținutul, produsele și serviciile de pe acest site (“https://www.tuiasi.ro”). Această politică de confidențialitate se aplică numai site-ului Web. Nu se aplică și altor site-uri web la care ne referim. Deoarece colectăm anumite tipuri de informații despre utilizatorii noștri, vrem să înțelegeți ce informații colectăm despre dvs., cum le colectăm, cum sunt folosite aceste informații și cum puteți controla circuitul informatiilor dvs. Sunteți de acord că utilizarea de către dvs. a site-ului înseamnă aprobarea dvs. față de această Politică de confidențialitate. Dacă nu sunteți de acord cu această Politică de confidențialitate, vă rugăm să nu utilizați site-ul Web.
             <br /><br /><strong>INFORMAȚII COLECTATE</strong>
             <br />Colectăm două tipuri de informații de la dvs.: informații care vă identifică personal (de exemplu, printr-un proces de înregistrare voluntară, înscrieri sau e-mailuri) și informații care nu va identifică personal.  
             <br /><br />Informații care vă identifică personal
@@ -57,7 +57,7 @@ const TermsModal = () => (
     
             <br /><br /><strong>CONFIDENȚIALITATEA COPIILOR</strong>
     
-            <br /><br />Websiteul Universitatea Tehnica Gheorghe Asachi Iasi nu este adresat copiilor sub vârsta de treisprezece ani și nu colectăm cu bună știință informații personale de la ei. Dacă un părinte sau tutore al unui copil sub vârsta de treisprezece ani are motive să creadă că s-au divulgat informații personale ale copiilor, vă rugăm să ne contactați la office@ecogardenconstruct.com și vom elimina aceste informații din evidența noastră.
+            <br /><br />Websiteul Universitatea Tehnica Gheorghe Asachi Iasi nu este adresat copiilor sub vârsta de treisprezece ani și nu colectăm cu bună știință informații personale de la ei. Dacă un părinte sau tutore al unui copil sub vârsta de treisprezece ani are motive să creadă că s-au divulgat informații personale ale copiilor, vă rugăm să ne contactați la pro_stud@tuiasi.ro și vom elimina aceste informații din evidența noastră.
     
             <br /><br /><strong>LINII EXTERNE</strong>
     
@@ -71,7 +71,7 @@ const TermsModal = () => (
     
             <br /><br />Universitatea Tehnica Gheorghe Asachi Iasi își rezervă dreptul de a modifica din timp în timp această politică de confidențialitate, la discreția sa. Dacă într-un anumit moment în viitor există modificări ale politicii noastre de confidențialitate, le vom posta pe site-ul nostru, deoarece vrem ca si vizitatorii noștri să fie întotdeauna informați cu privire la datele personale pe care le colectăm, la modul în care le folosim și la drepturile pe care le au.
     
-            <br /><br />Dacă aveți întrebări sau sugestii referitoare la politica noastră de confidențialitate, vă rugăm să ne contactați la: office@ecogardenconstruct.com.
+            <br /><br />Dacă aveți întrebări sau sugestii referitoare la politica noastră de confidențialitate, vă rugăm să ne contactați la: pro_stud@tuiasi.ro.
         </Typography>
     </div>
 )

@@ -144,3 +144,12 @@ export const login  = async (username, password) => {
 
     return response;
 }
+
+export const loginWithOpenId  = async (token) => {
+    const response = await apiCall('/loginWithToken.do', {
+        'domain': 'student.tuiasi.ro',
+        'token': token
+    });
+
+    return response;
+}
